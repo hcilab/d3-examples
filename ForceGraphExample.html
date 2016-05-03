@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<svg class="chart" width="1500" height="250"></svg>
+<script type="text/javascript" src="d3.js"></script>
+<script>
+
+	d3.tsv("data2.tsv", type, function(error, data) {
+		if (error) throw error;
+
+		var svg = d3.select("svg");
+
+		var circle = svg.selectAll("circle")
+	    .data(data);
+
+		var circleEnter = circle.enter().append("circle");
+		
+		circleEnter.attr("cy", 100);
+		circleEnter.attr("cx", function(d, i) { return i*(Math.sqrt(d.frequency)+50) + 30; });
+		circleEnter.attr("r", function(d) { return 75*Math.sqrt(d.frequency); });
+		circleEnter.style("fill", "steelblue");
+		circleEnter.on("mouseover", function(d){
+		        d3.select(this).style({opacity:"0.5"})
+						d3.select(this).style({"-webkit-transform":"rotateY(180deg)"})
+						d3.select(this).style({"-webkit-transform-origin":"50% 50%"})
+						d3.select(this).style({"-webkit-transition":"-webkit-transform 2.0s"})
+					});
+		circleEnter.on('mouseout', function(d){
+					  d3.select(this).style({opacity:"1"})
+						d3.select(this).style({"-webkit-transform":"rotateY(360deg)"})
+						d3.select(this).style({"-webkit-transform-origin":"50% 50%"})
+						d3.select(this).style({"-webkit-transition":"-webkit-transform 2.0s"})
+					});
+	});
+	function type(d) {
+	  d.frequency = +d.frequency;
+	  return d;
+	}
+</script>
