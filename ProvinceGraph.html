@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node {
+  stroke-width: 1.5px;
+	opacity: 1.0;
+}
+
+.node:hover {
+  opacity: 0.5;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+</style>
+<script type="text/javascript" src="d3.js"></script>
+<script type="text/javascript" src="d3tip.js"></script>
+<script>
+	var width = 1500,
+    	height = 1000;
+
+	var foci = [{x: 100, y: 100},
+							{x: 200, y: 100},
+							{x: 300, y: 100},
+							{x: 400, y: 100},
+							{x: 500, y: 100},
+							{x: 100, y: 200},
+							{x: 200, y: 200},
+							{x: 300, y: 200},
+							{x: 400, y: 200},
+							{x: 500, y: 200}];
+
+	var fill = d3.scale.category10();
+
+	d3.csv("ca-500.csv", function(error, data) {
+		if (error) throw error;
+
+		var force = d3.layout.force()
+		    .nodes(data)
+		    .size([width, height])
+		    .on("tick", tick)
+		    .start();
+
+		var svg = d3.select("body").append("svg")
+		    .attr("width", width)
+		    .attr("height", height);
+
+		var tip = d3.tip()
+		  .attr('class', 'd3-tip')
+		  .offset([-10, 0])
+		  .html(function(d) {
+		    return "<span style='color:white'>" + d.first_name + " " + d.last_name + " (" + d.province + ")" + "</span>";
+		  })
+
+		svg.call(tip);
+
+		var node = svg.selectAll(".node")
+			.data(data)
+		.enter().append("circle")
+		.attr("class", "node")
+		.attr("cx", function(d) { return d.x; })
+    .attr("cy", function(d) { return d.y; })
+		.attr("r", 10)
+		.style("fill", function(d){return fill(colorSet(d))})
+		.style("stroke", function(d) { return d3.rgb(fill(colorSet(d))).darker(2); })
+		.call(force.drag)
+    .on("mousedown", function() { d3.event.stopPropagation(); })
+		.on("mouseover", tip.show)
+		.on("mouseout", tip.hide);
+
+		svg.style("opacity", 1e-6)
+		  .transition()
+		    .duration(1000)
+		    .style("opacity", 1);
+
+		d3.select("body")
+		    .on("mousedown", mousedown);
+
+		function tick(e) {
+			var k = 0.1*e.alpha;
+			data.forEach(function(o) {
+				var c = colorSet(o);
+				if(c != null){
+					o.y += (foci[c].y - o.y) * k;
+					o.x += (foci[c].x - o.x) * k;
+				}
+			});
+
+			node.attr("cx", function(d) { return d.x; })
+					.attr("cy", function(d) { return d.y; });
+		}
+
+		function mousedown() {
+		  data.forEach(function(o, i) {
+		    o.x += (Math.random() - .5) * 40;
+		    o.y += (Math.random() - .5) * 40;
+		  });
+		  force.resume();
+		}
+
+		function colorSet(d) {
+			if(d.province == "AB"){
+				return 0;
+			}
+			if(d.province == "BC"){
+				return 1;
+			}
+			if(d.province == "MB"){
+				return 2;
+			}
+			if(d.province == "NB"){
+				return 3;
+			}
+			if(d.province == "NL"){
+				return 4;
+			}
+			if(d.province == "NS"){
+				return 5;
+			}
+			if(d.province == "ON"){
+				return 6;
+			}
+			if(d.province == "PE"){
+				return 7;
+			}
+			if(d.province == "QC"){
+				return 8;
+			}
+			if(d.province == "SK"){
+				return 9;
+			}
+		}
+
+	});
+
+</script>
+<!--
+Step 1: Read the data and create a node for each datum :)
+Step 1.5: Make force work
+Step 2: Read the province element from each node and color them accordingly
+Step 3: Create tooltip that will show the name of the person represented by each node
+-->
