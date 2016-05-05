@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.chart rect {
+  fill: red;
+}
+
+.chart text {
+  fill: black;
+  font: 10px sans-serif;
+  text-anchor: end;
+}
+
+</style>
+<svg class="chart"></svg>
+<script type="text/javascript" src="d3.js"></script>
+<script>
+
+d3.csv("TB_Data.csv", function(error, data) {
+
+	var width = d3.max(data, function(d) { return d.e_inc_100k; });
+
+	var scale = 3;
+	width = width*scale + 1000;
+
+	var barHeight = 10;
+
+	var x = d3.scale.linear()
+	    .range([0, width]);
+
+	x.domain([0, width]);
+
+	var chart = d3.select(".chart")
+	    .attr("width", width);
+
+  chart.attr("height", barHeight * data.length);
+
+  var bar = chart.selectAll("g")
+      .data(data)
+    .enter().append("g")
+      .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
+
+  bar.append("rect")
+      .attr("width", function(d) { return x(d.e_inc_100k)*scale; })
+      .attr("height", barHeight - 1);
+
+  bar.append("text")
+      .attr("x", 200)
+      .attr("y", barHeight / 2)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.country + " " + d.year; });
+});
+
+</script>
