@@ -14,11 +14,11 @@
 	    .data(data);
 
 		var circleEnter = circle.enter().append("circle");
-		
+
 		circleEnter.attr("cy", 100);
 		circleEnter.attr("cx", function(d, i) { return i*(Math.sqrt(d.frequency)+50) + 30; });
 		circleEnter.attr("r", function(d) { return 75*Math.sqrt(d.frequency); });
-		circleEnter.style("fill", "steelblue");
+		circleEnter.style("fill", "orange");
 		circleEnter.on("mouseover", function(d){
 		        d3.select(this).style({opacity:"0.5"})
 						d3.select(this).style({"-webkit-transform":"rotateY(180deg)"})
