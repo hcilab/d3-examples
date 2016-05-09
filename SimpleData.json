@@ -1,0 +1,24 @@
+{
+  "people":[
+    {"name":"Anne","fruit":"Apples"},
+		{"name":"Anne","fruit":"Bananas"},
+		{"name":"Anne","fruit":"Oranges"},
+		{"name":"Bob","fruit":"Apples"},
+		{"name":"Kate","fruit":"Oranges"},
+		{"name":"John","fruit":"Oranges"},
+		{"name":"Barry","fruit":"Peaches"},
+		{"name":"Carl","fruit":"Apples"},
+		{"name":"Steve","fruit":"Bananas"},
+		{"name":"Polly","fruit":"Peaches"},
+		{"name":"Chad","fruit":"Bananas"},
+		{"name":"Brandon","fruit":"Bananas"},
+		{"name":"Steve","fruit":"Grapes"},
+		{"name":"Mary","fruit":"Apples"},
+		{"name":"Dave","fruit":"Oranges"},
+		{"name":"Dave","fruit":"Apples"},
+		{"name":"Paul","fruit":"Oranges"},
+		{"name":"Bob","fruit":"Apples"},
+		{"name":"Bob","fruit":"Oranges"},
+		{"name":"Carl","fruit":"Apples"}
+  ]
+}

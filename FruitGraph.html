@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+	.bar{
+		fill: gold;
+		position: absolute;
+	}
+	.select1,
+	.select2{
+		fill: green;
+		position: absolute;
+	}
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+	text{
+		opacity: 1.0;
+	}
+</style>
+<script type="text/javascript" src="d3.js"></script>
+<body>
+	<script>
+
+		var margin = {top: 20, right: 20, bottom: 30, left: 40},
+		    width = 960 - margin.left - margin.right,
+		    height = 500 - margin.top - margin.bottom;
+
+		var x = d3.scale.ordinal()
+		    .rangeRoundBands([0, width], 0.5);
+
+		var y = d3.scale.linear()
+		    .range([height, 0]);
+
+		var xAxis = d3.svg.axis()
+		    .scale(x)
+		    .orient("bottom");
+
+		var yAxis = d3.svg.axis()
+		    .scale(y)
+		    .orient("left")
+				.ticks(10, "Likes");
+
+		var svg = d3.select("body").append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("height", height + margin.top + margin.bottom)
+				.attr("class", "fruitChart")
+		  .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		var fruitList = [];
+		var fruitCount = [];
+
+		var select1 = -1;
+		var select2 = -1;
+
+		d3.json("SimpleData.json", function(error, data){
+			if (error) throw error;
+			buildGraph(data);
+		});
+
+		function buildGraph(data){
+				getDistinctFruits(data);
+				getFruitCount(data);
+				x.domain(fruitList);
+				y.domain([0, d3.max(fruitCount)]);
+
+				svg.selectAll("rect")
+						.data(fruitList)
+					.enter().append("rect")
+						.attr("class", "bar")
+						.attr("x", function(d,i){ return x(fruitList[i]); })
+			      .attr("width", x.rangeBand())
+			      .attr("y", function(d,i){ return y(fruitCount[i]); })
+			      .attr("height", function(d,i){ return height - y(fruitCount[i]);})
+						.on("mouseover", function(d){
+			        d3.select(this).style({opacity:"0.5"});
+						})
+						.on("mouseout", function(d){
+							d3.select(this).style({opacity:"1.0"});
+						})
+						.on("click", function(d, i){
+							if(!(select1 != -1 && select2 != -1)){
+								if(select1 == -1){
+									select1 = i;
+									d3.select(this).attr("class", "select1");
+								}
+								else{
+									if(select1 == i){
+										select1 = -1;
+										d3.select(this).attr("class", "bar");
+									}
+									else{
+										select2 = i;
+										d3.select(this).attr("class", "select2");
+										swap(select1, select2);
+									}
+								}
+							}
+						});
+				svg.append("g")
+						.attr("class", "x axis")
+						.attr("transform", "translate(0," + height + ")")
+						.call(xAxis);
+				svg.append("g")
+				    .attr("class", "y axis")
+				    .attr("transform", "translate(0,0)")
+				    .call(yAxis);
+				svg.append("g")
+						.attr("class", "y axis")
+						.call(yAxis)
+					.append("text")
+						.attr("class", "label")
+						.attr("transform", "rotate(-90)")
+						.attr("y", 6)
+						.attr("dy", ".71em")
+						.attr("opacity", 1.0)
+						.style("text-anchor", "end")
+						.text("Number of Likes");
+		}
+
+		function getDistinctFruits(d){
+			var temp = [];
+			d.people.forEach(function(d,i) {
+				temp[i] = d.fruit;
+			});
+			var count = 0;
+			var multiple = false;
+			temp.forEach(function(t) {
+				if(count == 0){
+					fruitList[0] = t;
+					count++;
+				}
+				fruitList.forEach(function(f) {
+					if(t == f){
+						multiple = true;
+					}
+				});
+				if(!multiple){
+					fruitList[count] = t;
+					count++;
+				}
+				multiple = false;
+			});
+		}
+
+		function getFruitCount(d){
+			fruitList.forEach(function(f,j) {
+				fruitCount[j] = 0;
+				d.people.forEach(function(d,i) {
+					if(d.fruit == fruitList[j]){
+						fruitCount[j]++;
+					}
+				});
+			});
+		}
+
+		function collapse(){
+			svg.selectAll(".select1")
+				.transition()
+				.duration(1000)
+				.attr("height", 0)
+				.attr("y", height);
+
+			svg.selectAll(".select2")
+				.transition()
+				.duration(1000)
+				.attr("height", 0)
+				.attr("y", height);
+		}
+		function uncollapse(){
+			x.domain(fruitList);
+			y.domain([0, d3.max(fruitCount)]);
+
+			svg.select(".select1")
+				.transition()
+				.duration(1000)
+				.attr("x", function(){ return x(fruitList[select1]); })
+				.attr("width", x.rangeBand())
+				.attr("y", function(){ return y(fruitCount[select1]); })
+				.attr("height", function(){ return height - y(fruitCount[select1]);});
+
+			svg.select(".select2")
+				.transition()
+				.duration(1000)
+				.attr("x", function(){ return x(fruitList[select2]); })
+				.attr("width", x.rangeBand())
+				.attr("y", function(){ return y(fruitCount[select2]); })
+				.attr("height", function(){ return height - y(fruitCount[select2]);});
+
+			svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.style("opacity", 0.0)
+					.call(xAxis);
+
+			d3.selectAll(".x.axis")
+				.transition()
+				.duration(1000)
+				.style("opacity", 1.0);
+
+			d3.select(".select1")
+				.transition()
+				.delay(900)
+				.attr("class", "bar");
+
+			d3.select(".select2")
+				.transition()
+				.delay(900)
+				.attr("class", "bar");
+
+			select1 = -1;
+			select2 = -1;
+
+		}
+
+		function swap(s1, s2){
+			setTimeout(collapse,1000);
+
+			d3.selectAll(".x.axis").selectAll("text")
+				.transition()
+				.duration(1000)
+				.style("opacity", 0.0);
+
+			d3.selectAll(".x.axis").selectAll("text")
+				.transition()
+				.delay(1000)
+				.remove();
+
+			var temp = fruitList[s1];
+			fruitList[s1] = fruitList[s2];
+			fruitList[s2] = temp;
+			temp = fruitCount[s1];
+			fruitCount[s1] = fruitCount[s2];
+			fruitCount[s2] = temp;
+			setTimeout(uncollapse,2500);
+		}
+
+		function getDistinctPeople(d, i){
+			var people = [];
+			var count = 0;
+			var multiple = false;
+			var like = false;
+			d.people.forEach(function(t) {
+					if(count == 0 && fruitList[i] == t.fruit){
+						people[count] = t.name;
+						count++;
+					}
+					for(j = 0; j < people.length; j++){
+						multiple = (people[j] == t.name);
+						like = (t.fruit == fruitList[i])
+					}
+					if(!multiple && like && count != 0){
+						people[count] = t.name;
+						count++;
+					}
+			});
+			return people;
+		}
+
+	</script>
+</body>
