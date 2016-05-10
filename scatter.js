@@ -124,7 +124,6 @@ d3.csv("ScatterplotData.csv", function(data) {
 
 	objects.append("line")
 		.attr("class", "trend")
-		.attr("transform", transformLine)
 		.attr("x1", x(trendData[0]))
 		.attr("y1", y(trendData[1]))
 		.attr("x2", x(trendData[2]))
@@ -150,7 +149,7 @@ d3.csv("ScatterplotData.csv", function(data) {
   function transform(d) {
 		return "translate(" + x(d[xCat]) + "," + y(d[yCat]) + ")";
   }
-	
+
 	function trendline(d){
 		var xLabels = data.map(function (d) { return d['Year']; })
 		var xSeries = d3.range(1, xLabels.length + 1);
