@@ -1,0 +1,100 @@
+D3 Notes
+- Assume you have some data you want to visualize
+- Firstly, you want to analyze the data you'll be visualizing and put it into a usable format.
+- This requires you to understand your data, and know exactly which parts of the data you want to visualize.
+- You also need to consider the quantity of the data For example, it may not be viable to make a bar chart with individual labels if your data is too big.
+- Altogether, you need to decide on a visualization that best shows the data you want to explain. Decide how size, position, labels, color, sorting, etc. will be implemented.
+- Before you begin coding, you also want to consider the transitions and interactions that the visualization will have. It can sometimes be tricky to add transitions if you've already laid a foundation.
+
+- To use the D3 library, I prefer to download d3.js and call it like so:
+<script type="text/javascript" src="d3.js"></script>
+- You can also call a "minified" version from online like so:
+<script src="//d3js.org/d3.v3.min.js"></script>
+
+- With D3, standard data formats like .csv ,tsv and .json are easily parsed like so:
+d3.[format]("[data_file_name].[format]", function(error, data) {
+	if (error) throw error;
+	<!--Insert data-handling code here-->
+	});
+- For example, if you wanted to parse (and handle errors with reading the data) CoolData.csv, you'd use:
+d3.csv("CoolData.csv", function(error, data) {
+	if (error) throw error;
+	});
+
+- D3 uses "selections" to define how groups of elements and data act.
+- To make a selection with D3, use the .select() or .selectAll() functions.
+- You can select elements based on their tag, class, id, attribute, or containment.
+- You can also select using intersections and unions of various selectors.
+- d3.select("div") will select a specified element, "div" in this case. If more than one "div" element exists, the first one will be selected.
+- d3.selectAll("div") will selected all "div" elements.
+- Note that the specified elements don't necessarily have to exist yet, these "div" elements may be created dynamically from your data set (See further for more details).
+- Note that you may "chain" selections like so:
+d3.select("body").selectAll(".chart").selectAll("p");
+- This selection will be all "p" elements from all elements of the "chart" class in the body of the document.
+- Note that chains can be long and normally appear in code in this format:
+d3.select("body")
+	.selectAll(".chart")
+	.selectAll("p");
+- Also note that this code is just returning a "selection" and nothing is being done with it.
+- Chaining is not mandatory:
+var body = d3.select("body");
+var chart = body.selectAll(".chart");
+var paragraph = bodyChart.selectAll("p");
+- This code accomplishes the same thing, but this is usually messier, especially if you're doing large chains and you only need each selection once.
+
+- Binding data to different elements with D3 is done with the .data() function.
+- To bind your data to a selection, call the function like so:
+d3.selectAll([element]).data([yourDataVariable])
+- In the earlier example, our data variable was "data"
+- We will also make a selection of all "div" elements using d3.selectAll("div")
+d3.selectAll("div").data(data)
+- In this case, you are specifying that the data will be bound to div elements, even though there may not be any div elements yet.
+- So far, nothing will be created.
+
+- D3 updates by joining data with 3 main functions: enter, update, and exit
+- The .enter() function makes a selection of all data that has been bound to elements that don't exist yet, so that they can be created.
+- The .update() function makes selection of all data that is already bound to elements and may have changed, so that they may be updated.
+- The .exit() function makes a selection of all elements that no longer have data bound to them, so that they may be removed.
+
+- The .append() function is used to append an element associated with a selection onto another element.
+- To append a new element, make a selection, then call the append() function like so:
+d3.select("body").append("div");
+- This code selects the "body" element and appends a div element to it.
+- Typically, new elements are created when new data is bound to elements that do not exist, so the enter() function is used to select what is to be appended in this case (note the formatting):
+d3.selectAll("div")
+		.data(data)
+	.enter().append("div");
+- This code selects all divs (although none currently exist), and binds the data to them.
+- Next, it calls enter(), which selects all data elements that could not be bound to a div.
+- Finally, divs are appended to the selection.
+
+- There are functions like .attr(), .style(), and .text() which allow you to modify selections.
+- For example, you can change attributes such as height, width, and position, or styles such as color, opacity, and cool rotation effects.
+d3.select("body").append("p")
+	.style("color", "red")
+	.text("Red text");
+- This code appends a paragraph element to the body element, makes it red, and assigns some text.
+- Note that each of these modify functions returns the selection, so you can continue to "chain" the modifications.
+- If you want the elements you're modifying, you can use the .transition() function to make a smooth visual transition between the two states of the modified element.
+- You can also use functions like .delay() and .duration() to modify the timing of the transition.
+- The following code assumes the previous "p" element with red text exists:
+d3.select("p")
+	.transition()
+	.delay(5000)
+	.duration(1000)
+	.style("color", "blue")
+	.text("Blue text");
+- This code waits 5000 milliseconds (5 seconds), then takes 1000 seconds to transition the color to blue, and change the text content.
+- Note that the text transition is immediate, whereas position, size, and color transitions can be gradual
+
+- The .on() function allows you to apply interactivity to elements
+- The following code assumes the previous "p" element with red text exists:
+d3.select("p")
+	.on("mousedown", function(d){
+		d3.select(this)
+		.transition()
+		.duration(1000)
+		.style("color", "blue")
+		.text("Blue text");});
+	})
+- This code will do the same transition as before, but will do it instantly when clicked instead of waiting 5 seconds.

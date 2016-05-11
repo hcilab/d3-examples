@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script type="text/javascript" src="d3.js"></script>
+<style>
+	.small{
+		fill: #222;
+		font-size: 16px;
+	}
+	line{
+		stroke-width: 40;
+	}
+</style>
+<body></body>
+<script>
+	var monthMap = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+	var width = 1500;
+	var height = 600;
+
+	d3.csv("weatherData.csv", function(error, data) {
+		if (error) throw error;
+		var dataMonth = function(d){ return +d["month"]; }
+		var dataTemp = function(d){ return +d["temp"]; }
+		var dataPrecip = function(d){ return +d["precip"]; }
+		var keyFn = dataMonth;
+
+		var tempScale = d3.scale.linear()
+		    .domain(d3.extent(data, dataTemp))
+		    .range([100, 0]);
+		var precipScale = d3.scale.linear()
+		    .domain([0, d3.max(data, dataPrecip)])
+		    .range([50, 0]);
+		var xScale = d3.scale.linear()
+		    .domain([0, data.length])
+		    .range([0, width]);
+		var datumWidth = xScale(1) - xScale(0);
+
+		var chart = d3.select('body').append('svg')
+		    .attr('width', width)
+		    .attr('height', height);
+		var tempG = chart.append('g').attr('class', 'temps')
+		    .attr('transform', 'translate(0, 20)');
+		var precipG = chart.append('g').attr('class', 'precips')
+		    .attr('transform', 'translate(' + [0, 30 + d3.max(tempScale.range())] + ')');
+
+		var title = chart.append('text')
+		    .attr('x', width / 2)
+		    .attr('y', height - 10)
+		    .attr('text-anchor', 'middle')
+		    .text('Fredericton Weather 2015');
+
+		var drawChart = function() {
+		  var tempGs = tempG.selectAll('g.tick').data(data, keyFn);
+		  var newTempGs = tempGs.enter().append('g')
+		      .attr('class', 'tick');
+		  tempGs.transition().duration(1000)
+		      .attr('transform', function(d, i) {
+		        return 'translate(' + [xScale(i) + datumWidth / 2, tempScale(dataTemp(d))] + ')';
+		      })
+		  newTempGs.append('line')
+		      .attr('x1', -datumWidth / 2)
+		      .attr('x2', datumWidth / 2)
+					.style("stroke", "#EEAA66");
+		  newTempGs.append('text')
+		      .attr('class', 'small')
+		      .attr('text-anchor', 'middle')
+		      .attr('dy', '-0.3em');
+		  tempGs.select('text')
+		      .text(function(d) { return Math.round(dataTemp(d)) + '°C'; });
+
+		  var precipGs = precipG.selectAll('g.tick').data(data, keyFn);
+		  var newPrecipGs = precipGs.enter().append('g')
+		      .attr('class', 'tick');
+		  precipGs.transition().duration(1000)
+		      .attr('transform', function(d, i) {
+		        return 'translate(' + [xScale(i) + datumWidth / 2, precipScale(dataPrecip(d))] + ')';
+		      })
+		  newPrecipGs.append('line')
+		      .attr('x1', -datumWidth / 2)
+		      .attr('x2', datumWidth / 2)
+					.style("stroke", "#88CCEE");
+		  newPrecipGs.append('text')
+		      .attr('class', 'small')
+		      .attr('text-anchor', 'middle')
+		      .attr('dy', '-0.3em');
+		  precipGs.select('text')
+		      .text(function(d) { return dataPrecip(d) + 'mm'; });
+
+		  var labels = chart.selectAll('text.month').data(data, keyFn);
+		  labels.enter().append('text')
+		      .attr('class', 'month small')
+		      .attr('y', height - 375)
+		      .attr('text-anchor', 'middle');
+		  labels.transition().duration(1000)
+		      .attr('x', function(d, i) { return xScale(i) + datumWidth / 2; })
+		      .text(function(d) { return monthMap[dataMonth(d)-1]; });
+		};
+		drawChart();
+		var makeSortButton = function(field, rev) {
+		  return d3.select('body').append('button')
+		      .on('click', function() {
+		        data.sort(function(a, b) { return rev * (a[field] - b[field]); });
+		        drawChart();
+		      });
+		};
+		makeSortButton('month', 1).text('Sort by month');
+		makeSortButton('temp', -1).text('Sort by temperature');
+		makeSortButton('precip', -1).text('Sort by precipitation');
+	});
+</script>
