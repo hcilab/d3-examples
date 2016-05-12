@@ -98,3 +98,54 @@ d3.select("p")
 		.text("Blue text");});
 	})
 - This code will do the same transition as before, but will do it instantly when clicked instead of waiting 5 seconds.
+
+- One of the first things you should do when you begin making a data visualization is define the display size and margins:
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+- These values can be tweaked to suit your needs.
+
+- Next you'd like to define a scale for your data.
+- To define a scale (in this case linear scale) to graph your data you use the following code:
+var scale = d3.scale.linear()
+- You should also define an input domain and an output range like so:
+scale.domain([0, 100]);
+scale.range([0, 1000]);
+- Note these can be all chained together in the same statement.
+- The input domain of (0, 100) means that we will be expecting input data between (and including) 0 and 100.
+- The output range of (0, 1000) means that the minimum and maximum output size of your data visualization would be 0 and 1000 pixels respectively.
+- So now, the following statement would be true:
+scale(50) == 500;
+- It is common to have a scale for each axis.
+- Also, you don't always want to make your domain a fixed value, so it's smart to find min and max values of your data to define your domain:
+scale.domain(0, max(data));
+- Note, this statement works if "data" is just an array of values, but might not work for different structures of data.
+- Another common domain statement:
+ scale.domain(0, max(data, function(d){ return d.value; }));
+- This statement works when you have a data set that has objects with multiple values.
+- Note, rangeBands() and rangeRoundBands() are sometimes used instead of range() to tweak padding and sizing of the data visualization.
+
+-Another thing that should be done is append an svg element to be "display" box:
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+- This is a very simple creation of an svg element, sometimes they are created using your data.
+- It is common to append "g" onto your svg element:
+svg.append("g");
+- This will append a "g" group to your svg element within which you can append axes, labels, etc.
+
+- To make axes, you first need to define your axes:
+var xAxis = d3.svg.axis()
+    .scale([your_x_scale])
+    .orient("bottom");
+var yAxis = d3.svg.axis()
+    .scale([your_y_scale])
+    .orient("left")
+    .ticks(10, "%");
+- This example defines generic x and y axes	with some "ticks".
+- There are various orientations and ways to define ticks.
+- Later on, you'll add your axes with .call() like this:
+svg.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(xAxis);
