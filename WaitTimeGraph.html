@@ -1,20 +1,175 @@
 <!DOCTYPE html>
 <!--
+	~1.7M rows of data
+	~124k timestamps
 	WaitTimeDataManager.js populates 2 arrays (one for each hospital):
 	qehData and pchData
 	each is structured like this:
-	MeasureName[
+	xxhData[
 		MostUrgent[wait[], number[]],
 		Urgent[wait[], number[]],
 		LessUrgent[wait[], number[]],
-		Treating[number[]]
+		Treating[number[], []]
 	]
 -->
-<meta charset="utf-8">
-<script type="text/javascript" src="d3.js"></script>
-<script src="WaitTimeDataManager.js" charset="utf-8"></script>
-<body></body>
-<script>
-	console.log(qehData);
-	console.log(pchData);
-</script>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hospital Wait Times</title>
+    <link rel="stylesheet" href="WaitTimeScatter.css" charset="utf-8">
+  </head>
+  <body>
+		<script src="d3.js"></script>
+		<script src="d3tip.js"></script>
+  </body>
+	<script>
+		//Instantiate data arrays
+		var qehData = new Array();
+		var pchData = new Array();
+		for(var i = 0; i < 4; i++){
+			qehData[i] = new Array();
+			pchData[i] = new Array();
+		}
+
+		//Define margin
+		var margin = { top: 50, right: 300, bottom: 50, left: 75 },
+				outerWidth = 1500,
+				outerHeight = 800,
+				width = outerWidth - margin.left - margin.right,
+				height = outerHeight - margin.top - margin.bottom;
+
+		//Set scales, formatting, axes,etc.
+		var x = d3.time.scale()
+				.range([0, width]).nice();
+		var y = d3.scale.linear()
+				.range([height, 0]).nice();
+		var xCat = "Time",
+				yCat = "Wait Time (hrs)";
+		var timeFormat = d3.time.format("%x %X");
+
+		//Read data
+		d3.csv("waittimes.csv", function(error, data){
+			if(error) throw error;
+			//Manage data
+			data.forEach(function(d){
+				var hospital = d.hospital;
+				var measureName = d.measurename;
+				var measureVar = d.measurevariant;
+				if(hospital == "qeh"){
+					if(measureName == "mosturgent"){
+						if(measureVar == "number"){
+							qehData[0].push(d);
+						}
+						else if(measureVar == "wait"){
+							qehData[0][qehData[0].length-1].measureconverted = d.measureconverted;
+						}
+					}
+					else 	if(measureName == "urgent"){
+						if(measureVar == "number"){
+							qehData[1].push(d);
+						}
+						else if(measureVar == "wait"){
+							qehData[1][qehData[1].length-1].measureconverted = d.measureconverted;
+						}
+					}
+					else 	if(measureName == "lessurgent"){
+						if(measureVar == "number"){
+							qehData[2].push(d);
+						}
+						else if(measureVar == "wait"){
+							qehData[2][qehData[2].length-1].measureconverted = d.measureconverted;
+						}
+					}
+					else 	if(measureName == "treating"){
+						if(measureVar == "number"){
+							qehData[3].push(d);
+						}
+					}
+				}
+				else if(hospital == "pch"){
+					if(measureName == "mosturgent"){
+						if(measureVar == "number"){
+							pchData[0].push(d);
+						}
+						else if(measureVar == "wait"){
+							pchData[0][pchData[0].length-1].measureconverted = d.measureconverted;
+						}
+					}
+					else 	if(measureName == "urgent"){
+						if(measureVar == "number"){
+							pchData[1].push(d);
+						}
+						else if(measureVar == "wait"){
+							pchData[1][pchData[1].length-1].measureconverted = d.measureconverted;
+						}
+					}
+					else 	if(measureName == "lessurgent"){
+						if(measureVar == "number"){
+							pchData[2].push(d);
+						}
+						else if(measureVar == "wait"){
+							pchData[2][pchData[2].length-1].measureconverted = d.measureconverted;
+						}
+					}
+					else 	if(measureName == "treating"){
+						if(measureVar == "number"){
+							pchData[3].push(d);
+						}
+					}
+				}
+			});
+
+			x.domain(d3.extent(pchData[0], function(d) { return timeFormat.parse(d.sampletime); }));
+			y.domain([-1, 10]);
+
+			var xAxis = d3.svg.axis()
+					.scale(x)
+					.orient("bottom")
+					.tickSize(-height);
+
+			var yAxis = d3.svg.axis()
+					.scale(y)
+					.orient("left")
+					.tickSize(-width);
+
+			var svg = d3.select("body")
+		    .append("svg")
+		      .attr("width", outerWidth)
+		      .attr("height", outerHeight)
+		    .append("g")
+		      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+			svg.append("g")
+					.classed("x axis", true)
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis)
+				.append("text")
+					.classed("label", true)
+					.attr("x", width)
+					.attr("y", margin.bottom - 10)
+					.style("text-anchor", "end")
+					.text(xCat);
+
+			svg.append("g")
+		      .classed("y axis", true)
+		      .call(yAxis)
+		    .append("text")
+		      .classed("label", true)
+		      .attr("transform", "rotate(-90)")
+		      .attr("y", -margin.left)
+		      .attr("dy", ".71em")
+		      .style("text-anchor", "end")
+		      .text(yCat);
+
+			svg.selectAll(".dot")
+						.data(pchData[2])
+					.enter().append("circle")
+						.classed("dot", true)
+						.attr("transform", function(d){
+							return "translate(" + x(timeFormat.parse(d.sampletime)) + "," + y(d.measureconverted) + ")";
+						})
+						.attr("r", function(d){ return d.measurevalue; })
+						.attr("fill", "blue");
+		});
+	</script>
+</html>
