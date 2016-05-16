@@ -1,17 +1,4 @@
 <!DOCTYPE html>
-<!--
-	~1.7M rows of data
-	~124k timestamps
-	WaitTimeDataManager.js populates 2 arrays (one for each hospital):
-	qehData and pchData
-	each is structured like this:
-	xxhData[
-		MostUrgent[wait[], number[]],
-		Urgent[wait[], number[]],
-		LessUrgent[wait[], number[]],
-		Treating[number[], []]
-	]
--->
 <html>
   <head>
     <meta charset="utf-8">
@@ -33,7 +20,7 @@
 
 		//Define margin
 		var margin = { top: 50, right: 300, bottom: 50, left: 75 },
-				outerWidth = 1500,
+				outerWidth = 1600,
 				outerHeight = 800,
 				width = outerWidth - margin.left - margin.right,
 				height = outerHeight - margin.top - margin.bottom;
@@ -43,13 +30,37 @@
 				.range([0, width]).nice();
 		var y = d3.scale.linear()
 				.range([height, 0]).nice();
-		var xCat = "Time",
+		var xCat = "Date",
 				yCat = "Wait Time (hrs)";
 		var timeFormat = d3.time.format("%x %X");
+		var hosp = 0;
 
-		//Read data
+	//Read data
 		d3.csv("waittimes.csv", function(error, data){
 			if(error) throw error;
+
+			//Create button
+			d3.select('body').append('button')
+					.text(function(){
+						var text = "";
+						if(hosp == 0) text = "Switch to QEH";
+						else text = "Switch to PCH";
+						return text;
+					})
+					.on('click', function() {
+						if(hosp == 0) hosp = 1;
+						else hosp = 0;
+						d3.selectAll("svg").remove();
+						d3.select(this)
+							.text(function(){
+								var text = "";
+								if(hosp == 0) text = "Switch to QEH";
+								else text = "Switch to PCH";
+								return text;
+							});
+						updateDraw();
+					});
+
 			//Manage data
 			data.forEach(function(d){
 				var hospital = d.hospital;
@@ -111,7 +122,7 @@
 							pchData[2][pchData[2].length-1].measureconverted = d.measureconverted;
 						}
 					}
-					else 	if(measureName == "treating"){
+					else  if(measureName == "treating"){
 						if(measureVar == "number"){
 							pchData[3].push(d);
 						}
@@ -119,57 +130,224 @@
 				}
 			});
 
-			x.domain(d3.extent(pchData[0], function(d) { return timeFormat.parse(d.sampletime); }));
-			y.domain([-1, 10]);
+			var temp = [[],[],[],[]];
+			for(var i = 0; i < 4; i++){
+				var count = 0;
+				var waitTotal = 0;
+				var numberTotal = 0;
+				var index = 0;
+				var day = timeFormat.parse(pchData[i][0].sampletime);
+				for(var j = 0; j < pchData[i].length; j++){
+					var newDay = timeFormat.parse(pchData[i][j].sampletime);
+					if(newDay.getDate() == day.getDate()){
+						waitTotal += +pchData[i][j].measureconverted;
+						numberTotal += +pchData[i][j].measurevalue;
+						count++;
+					}
+					else{
+						var wait = waitTotal/count;
+						var number = numberTotal/count;
+						var d = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+						temp[i][index] = {date:d, wait:wait, number:number};
+						day = newDay;
+						count = 0;
+						waitTotal = 0;
+						numberTotal = 0;
+						index++;
+					}
+				}
+			}
+			pchData = temp;
 
-			var xAxis = d3.svg.axis()
-					.scale(x)
-					.orient("bottom")
-					.tickSize(-height);
+			temp = [[],[],[],[]];
+			for(var i = 0; i < 4; i++){
+				var count = 0;
+				var waitTotal = 0;
+				var numberTotal = 0;
+				var index = 0;
+				var day = timeFormat.parse(qehData[i][0].sampletime);
+				for(var j = 0; j < qehData[i].length; j++){
+					var newDay = timeFormat.parse(qehData[i][j].sampletime);
+					if(newDay.getDate() == day.getDate()){
+						waitTotal += +qehData[i][j].measureconverted;
+						numberTotal += +qehData[i][j].measurevalue;
+						count++;
+					}
+					else{
+						var wait = waitTotal/count;
+						var number = numberTotal/count;
+						temp[i][index] = {date:day, wait:wait, number:number};
+						day = newDay;
+						count = 0;
+						waitTotal = 0;
+						numberTotal = 0;
+						index++;
+					}
+				}
+			}
+			qehData = temp;
 
-			var yAxis = d3.svg.axis()
-					.scale(y)
-					.orient("left")
-					.tickSize(-width);
+			var updateDraw = function(){
+				x.domain(d3.extent(pchData[0], function(d) { return d.date; }));
+				y.domain([-0.5, 7]);
 
-			var svg = d3.select("body")
-		    .append("svg")
-		      .attr("width", outerWidth)
-		      .attr("height", outerHeight)
-		    .append("g")
-		      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+				var xAxis = d3.svg.axis()
+						.scale(x)
+						.orient("bottom")
+						.tickSize(-height);
 
-			svg.append("g")
-					.classed("x axis", true)
-					.attr("transform", "translate(0," + height + ")")
-					.call(xAxis)
-				.append("text")
-					.classed("label", true)
-					.attr("x", width)
-					.attr("y", margin.bottom - 10)
-					.style("text-anchor", "end")
-					.text(xCat);
+				var yAxis = d3.svg.axis()
+						.scale(y)
+						.orient("left")
+						.tickSize(-width);
 
-			svg.append("g")
-		      .classed("y axis", true)
-		      .call(yAxis)
-		    .append("text")
-		      .classed("label", true)
-		      .attr("transform", "rotate(-90)")
-		      .attr("y", -margin.left)
-		      .attr("dy", ".71em")
-		      .style("text-anchor", "end")
-		      .text(yCat);
+				var svg = d3.select("body")
+			    .append("svg")
+			      .attr("width", outerWidth)
+			      .attr("height", outerHeight)
+			    .append("g")
+			      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-			svg.selectAll(".dot")
-						.data(pchData[2])
-					.enter().append("circle")
-						.classed("dot", true)
-						.attr("transform", function(d){
-							return "translate(" + x(timeFormat.parse(d.sampletime)) + "," + y(d.measureconverted) + ")";
-						})
-						.attr("r", function(d){ return d.measurevalue; })
-						.attr("fill", "blue");
+				svg.append("g")
+					.append("text")
+						.attr("x", width/2 - 120)
+						.attr("y", -10)
+						.style("text-anchor", "center")
+						.style("font-size", 24)
+						.style("font-weight", "bold")
+						.text(function(){
+							if(hosp == 0) return "Hospital Wait Times at PCH";
+							else return "Hospital Wait Times at QEH";
+						});
+
+				svg.append("g")
+					.append("rect")
+						.attr("width", 250)
+						.attr("height",	150)
+						.attr("x", width + 30)
+						.attr("y", -10)
+						.attr("fill", "white")
+						.attr("stroke", "black");
+
+				svg.append("text")
+						.text("Most Urgent: ")
+						.attr("x", width + 40)
+						.attr("y", 10)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("circle")
+						.attr("class", "dot")
+						.attr("cx", width + 150)
+						.attr("cy", 5)
+						.attr("r", 10)
+						.attr("fill", "red");
+
+				svg.append("text")
+						.text("Urgent: ")
+						.attr("x", width + 40)
+						.attr("y", 50)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("circle")
+						.attr("class", "dot2")
+						.attr("cx", width + 150)
+						.attr("cy", 45)
+						.attr("r", 10)
+						.attr("fill", "orange");
+
+				svg.append("text")
+						.text("Less Urgent: ")
+						.attr("x", width + 40)
+						.attr("y", 90)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("circle")
+						.attr("class", "dot3")
+						.attr("cx", width + 150)
+						.attr("cy", 85)
+						.attr("r", 10)
+						.attr("fill", "green");
+
+				svg.append("text")
+						.text("Circle Radius: ")
+						.attr("x", width + 40)
+						.attr("y", 130)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("text")
+						.text("Number of People")
+						.attr("x", width + 150)
+						.attr("y", 130)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("g")
+						.classed("x axis", true)
+						.attr("transform", "translate(0," + height + ")")
+						.call(xAxis)
+					.append("text")
+						.classed("label", true)
+						.attr("x", width)
+						.attr("y", margin.bottom - 10)
+						.style("text-anchor", "end")
+						.text(xCat);
+
+				svg.append("g")
+			      .classed("y axis", true)
+			      .call(yAxis)
+			    .append("text")
+			      .classed("label", true)
+			      .attr("transform", "rotate(-90)")
+			      .attr("y", -margin.left)
+			      .attr("dy", ".71em")
+			      .style("text-anchor", "end")
+			      .text(yCat);
+
+				svg.selectAll(".dot3")
+							.data(function(){
+								if(hosp == 0) return pchData[2];
+								else return qehData[2];
+							})
+						.enter().append("circle")
+							.classed("dot3", true)
+							.attr("transform", function(d){
+								return "translate(" + x(d.date) + "," + y(d.wait) + ")";
+							})
+							.attr("r", function(d){ return Math.sqrt(d.number*20); })
+							.attr("fill", "green");
+				svg.selectAll(".dot2")
+							.data(function(){
+								if(hosp == 0) return pchData[1];
+								else return qehData[1];
+							})
+						.enter().append("circle")
+							.classed("dot2", true)
+							.attr("transform", function(d){
+								return "translate(" + x(d.date) + "," + y(d.wait) + ")";
+							})
+							.attr("r", function(d){ return Math.sqrt(d.number*20); })
+							.attr("fill", "orange");
+				svg.selectAll(".dot")
+							.data(function(){
+								if(hosp == 0) return pchData[0];
+								else return qehData[0];
+							})
+						.enter().append("circle")
+							.classed("dot", true)
+							.attr("transform", function(d){
+								return "translate(" + x(d.date) + "," + y(d.wait) + ")";
+							})
+							.attr("r", function(d){ return Math.sqrt(d.number*20); })
+							.attr("fill", "red");
+			}
+
+			updateDraw();
+
 		});
+
 	</script>
 </html>
