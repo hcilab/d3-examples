@@ -33,33 +33,21 @@
 		var xCat = "Date",
 				yCat = "Wait Time (hrs)";
 		var timeFormat = d3.time.format("%x %X");
-		var hosp = 0;
+
+		//Set data flags
+		var pchMU = false;
+		var pchU = false;
+		var pchLU = false;
+		var pchA = false;
+		var qehMU = false;
+		var qehU = false;
+		var qehLU = false;
+		var qehA = false;
+
 
 	//Read data
 		d3.csv("waittimes.csv", function(error, data){
 			if(error) throw error;
-
-			//Create button
-			d3.select('body').append('button')
-					.text(function(){
-						var text = "";
-						if(hosp == 0) text = "Switch to QEH";
-						else text = "Switch to PCH";
-						return text;
-					})
-					.on('click', function() {
-						if(hosp == 0) hosp = 1;
-						else hosp = 0;
-						d3.selectAll("svg").remove();
-						d3.select(this)
-							.text(function(){
-								var text = "";
-								if(hosp == 0) text = "Switch to QEH";
-								else text = "Switch to PCH";
-								return text;
-							});
-						updateDraw();
-					});
 
 			//Manage data
 			data.forEach(function(d){
@@ -188,8 +176,8 @@
 			qehData = temp;
 
 			var updateDraw = function(){
-				x.domain(d3.extent(pchData[0], function(d) { return d.date; }));
-				y.domain([-0.5, 7]);
+				x.domain(d3.extent(qehData[2], function(d) { return d.date; }));
+				y.domain([0, 7]);
 
 				var xAxis = d3.svg.axis()
 						.scale(x)
@@ -215,15 +203,20 @@
 						.style("text-anchor", "center")
 						.style("font-size", 24)
 						.style("font-weight", "bold")
-						.text(function(){
-							if(hosp == 0) return "Hospital Wait Times at PCH";
-							else return "Hospital Wait Times at QEH";
-						});
+						.text("Hospital Wait Times in PEI");
+
+				//PCH Legend
+				svg.append("text")
+						.text("PCH")
+						.attr("x", width + 130)
+						.attr("y", -20)
+						.style("text-anchor", "left")
+						.style("font-size", 22);
 
 				svg.append("g")
 					.append("rect")
 						.attr("width", 250)
-						.attr("height",	150)
+						.attr("height",	200)
 						.attr("x", width + 30)
 						.attr("y", -10)
 						.attr("fill", "white")
@@ -241,7 +234,20 @@
 						.attr("cx", width + 150)
 						.attr("cy", 5)
 						.attr("r", 10)
-						.attr("fill", "red");
+						.attr("fill", "red")
+						.on("mouseover", function(){
+							d3.selectAll(".dot")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							pchMU = !pchMU;
+							updateDraw();
+						});
 
 				svg.append("text")
 						.text("Urgent: ")
@@ -255,7 +261,20 @@
 						.attr("cx", width + 150)
 						.attr("cy", 45)
 						.attr("r", 10)
-						.attr("fill", "orange");
+						.attr("fill", "orange")
+						.on("mouseover", function(){
+							d3.selectAll(".dot2")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot2")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							pchU = !pchU;
+							updateDraw();
+						});
 
 				svg.append("text")
 						.text("Less Urgent: ")
@@ -269,19 +288,202 @@
 						.attr("cx", width + 150)
 						.attr("cy", 85)
 						.attr("r", 10)
-						.attr("fill", "green");
+						.attr("fill", "green")
+						.on("mouseover", function(){
+							d3.selectAll(".dot3")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot3")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							pchLU = !pchLU;
+							updateDraw();
+						});
 
 				svg.append("text")
-						.text("Circle Radius: ")
+						.text("Average: ")
 						.attr("x", width + 40)
 						.attr("y", 130)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
+				svg.append("circle")
+						.attr("class", "dot4")
+						.attr("cx", width + 150)
+						.attr("cy", 125)
+						.attr("r", 10)
+						.attr("fill", "blue")
+						.on("mouseover", function(){
+							d3.selectAll(".dot4")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot4")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							pchA = !pchA;
+							updateDraw();
+						});
+
+				svg.append("text")
+						.text("Size: ")
+						.attr("x", width + 40)
+						.attr("y", 170)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
 				svg.append("text")
 						.text("Number of People")
-						.attr("x", width + 150)
-						.attr("y", 130)
+						.attr("x", width + 80)
+						.attr("y", 170)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				//QEH Legend
+				svg.append("text")
+						.text("QEH")
+						.attr("x", width + 130)
+						.attr("y", -20 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 22);
+
+				svg.append("g")
+					.append("rect")
+						.attr("width", 250)
+						.attr("height",	200)
+						.attr("x", width + 30)
+						.attr("y", -10 + 280)
+						.attr("fill", "white")
+						.attr("stroke", "black");
+
+				svg.append("text")
+						.text("Most Urgent: ")
+						.attr("x", width + 40)
+						.attr("y", 10 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("rect")
+						.attr("class", "dot5")
+						.attr("width", 15)
+						.attr("height", 15)
+						.attr("x", width + 140)
+						.attr("y", 5 + 275)
+						.attr("fill", "red")
+						.on("mouseover", function(){
+							d3.selectAll(".dot5")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot5")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							qehMU = !qehMU;
+							updateDraw();
+						});
+
+				svg.append("text")
+						.text("Urgent: ")
+						.attr("x", width + 40)
+						.attr("y", 50 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("rect")
+						.attr("class", "dot6")
+						.attr("width", 15)
+						.attr("height", 15)
+						.attr("x", width + 140)
+						.attr("y", 45 + 275)
+						.attr("fill", "orange")
+						.on("mouseover", function(){
+							d3.selectAll(".dot6")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot6")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							qehU = !qehU;
+							updateDraw();
+						});
+
+				svg.append("text")
+						.text("Less Urgent: ")
+						.attr("x", width + 40)
+						.attr("y", 90 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("rect")
+						.attr("class", "dot7")
+						.attr("width", 15)
+						.attr("height", 15)
+						.attr("x", width + 140)
+						.attr("y", 85 + 275)
+						.attr("fill", "green")
+						.on("mouseover", function(){
+							d3.selectAll(".dot7")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot7")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							qehLU = !qehLU;
+							updateDraw();
+						});
+
+				svg.append("text")
+						.text("Average: ")
+						.attr("x", width + 40)
+						.attr("y", 130 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("rect")
+						.attr("class", "dot8")
+						.attr("width", 15)
+						.attr("height", 15)
+						.attr("x", width + 140)
+						.attr("y", 130 + 270)
+						.attr("fill", "blue")
+						.on("mouseover", function(){
+							d3.selectAll(".dot8")
+								.style("fill-opacity", 1);
+						})
+						.on("mouseout", function(){
+							d3.selectAll(".dot8")
+								.style("fill-opacity", 0.5);
+						})
+						.on("click", function(){
+							d3.selectAll("svg").remove();
+							qehA = !qehA;
+							updateDraw();
+						});
+
+				svg.append("text")
+						.text("Size: ")
+						.attr("x", width + 40)
+						.attr("y", 170 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 16);
+
+				svg.append("text")
+						.text("Number of People")
+						.attr("x", width + 80)
+						.attr("y", 170 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
@@ -307,42 +509,120 @@
 			      .style("text-anchor", "end")
 			      .text(yCat);
 
-				svg.selectAll(".dot3")
-							.data(function(){
-								if(hosp == 0) return pchData[2];
-								else return qehData[2];
-							})
-						.enter().append("circle")
-							.classed("dot3", true)
-							.attr("transform", function(d){
-								return "translate(" + x(d.date) + "," + y(d.wait) + ")";
-							})
-							.attr("r", function(d){ return Math.sqrt(d.number*20); })
-							.attr("fill", "green");
-				svg.selectAll(".dot2")
-							.data(function(){
-								if(hosp == 0) return pchData[1];
-								else return qehData[1];
-							})
-						.enter().append("circle")
-							.classed("dot2", true)
-							.attr("transform", function(d){
-								return "translate(" + x(d.date) + "," + y(d.wait) + ")";
-							})
-							.attr("r", function(d){ return Math.sqrt(d.number*20); })
-							.attr("fill", "orange");
-				svg.selectAll(".dot")
-							.data(function(){
-								if(hosp == 0) return pchData[0];
-								else return qehData[0];
-							})
-						.enter().append("circle")
-							.classed("dot", true)
-							.attr("transform", function(d){
-								return "translate(" + x(d.date) + "," + y(d.wait) + ")";
-							})
-							.attr("r", function(d){ return Math.sqrt(d.number*20); })
-							.attr("fill", "red");
+
+				//Add Data Shape Elements
+
+				//PCH Elements
+					if(pchLU){
+						svg.selectAll(".dot3")
+									.data(pchData[2])
+								.enter().append("circle")
+									.classed("dot3", true)
+									.attr("transform", function(d){
+										if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("r", function(d){ return Math.sqrt(d.number*20); })
+									.attr("fill", "green");
+					}
+					if(pchU){
+						svg.selectAll(".dot2")
+									.data(pchData[1])
+								.enter().append("circle")
+									.classed("dot2", true)
+									.attr("transform", function(d){
+										if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("r", function(d){ return Math.sqrt(d.number*20); })
+									.attr("fill", "orange");
+					}
+					if(pchMU){
+						svg.selectAll(".dot")
+									.data(pchData[0])
+								.enter().append("circle")
+									.classed("dot", true)
+									.attr("transform", function(d){
+										if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("r", function(d){ return Math.sqrt(d.number*20); })
+									.attr("fill", "red");
+					}
+					if(pchA){
+						svg.selectAll(".dot4")
+									.data(pchData[0])
+								.enter().append("circle")
+									.classed("dot4", true)
+									.attr("transform", function(d,i){
+										var wait = (pchData[0][i].wait + pchData[1][i].wait + pchData[2][i].wait)/3;
+										if(wait != 0) return "translate(" + x(d.date) + "," + y(wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("r", function(d,i){
+										return Math.sqrt((20*(pchData[0][i].number + pchData[1][i].number + pchData[2][i].number)/3));
+									})
+									.attr("fill", "blue");
+					}
+
+					//QEH Elements
+					if(qehLU){
+						svg.selectAll(".dot7")
+									.data(qehData[2])
+								.enter().append("rect")
+									.classed("dot7", true)
+									.attr("transform", function(d){
+										if(d.wait != 0)	return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(d.wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("width", function(d){ return Math.sqrt(d.number*40); })
+									.attr("height", function(d){ return Math.sqrt(d.number*40); })
+									.attr("fill", "green");
+					}
+					if(qehU){
+						svg.selectAll(".dot6")
+									.data(qehData[1])
+								.enter().append("rect")
+									.classed("dot6", true)
+									.attr("transform", function(d){
+										if(d.wait != 0)	return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(d.wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("width", function(d){ return Math.sqrt(d.number*40); })
+									.attr("height", function(d){ return Math.sqrt(d.number*40); })
+									.attr("fill", "orange");
+					}
+					if(qehMU){
+						svg.selectAll(".dot5")
+									.data(qehData[0])
+								.enter().append("rect")
+									.classed("dot5", true)
+									.attr("transform", function(d){
+										if(d.wait != 0)	return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(d.wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("width", function(d){ return Math.sqrt(d.number*40); })
+									.attr("height", function(d){ return Math.sqrt(d.number*40); })
+									.attr("fill", "red");
+					}
+					if(qehA){
+						svg.selectAll(".dot8")
+									.data(qehData[0])
+								.enter().append("rect")
+									.classed("dot8", true)
+									.attr("transform", function(d,i){
+										var wait = (qehData[0][i].wait + qehData[1][i].wait + qehData[2][i].wait)/3;
+										if(wait != 0) return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(wait) + ")";
+										else return "translate(" + -100 + "," + -100 + ")";
+									})
+									.attr("width", function(d,i){
+										return Math.sqrt(40*(qehData[0][i].number + qehData[1][i].number + qehData[2][i].number)/3);
+									})
+									.attr("height", function(d,i){
+										return Math.sqrt(40*(qehData[0][i].number + qehData[1][i].number + qehData[2][i].number)/3);
+									})
+									.attr("fill", "blue");
+					}
 			}
 
 			updateDraw();
