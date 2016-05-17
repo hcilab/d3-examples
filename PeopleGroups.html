@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script type="text/javascript" src="d3.js"></script>
+<body></body>
+<script>
+
+var width = 960,
+    height = 500,
+    radius = Math.min(width, height) / 2;
+
+var color = d3.scale.category10();
+
+var arc = d3.svg.arc()
+    .outerRadius(radius - 10)
+    .innerRadius(0);
+
+var labelArc = d3.svg.arc()
+    .outerRadius(radius - 40)
+    .innerRadius(radius - 40);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+var count = [];
+
+d3.csv("PeopleGroups.csv", type, function(error, data){
+	if(error) throw error;
+	data.forEach(function(d){
+		if(!count[d.group - 1]) count[d.group - 1] = 0;
+		count[d.group - 1]++;
+	});
+	var pie = d3.layout.pie()
+			.sort(null)
+			.value(function(d){ return d });
+
+
+	var g = svg.selectAll(".arc")
+      .data(pie(count))
+    .enter().append("g")
+      .attr("class", "arc");
+	g.append("path")
+		.attr("d", arc)
+		.style("fill", function(d,i) { return color(i); });
+
+	g.append("text")
+      .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
+			.attr("x", function(d){ return d3.transform(g.attr("transform")).translate[0] - 28 })
+			.attr("dy", ".35em")
+      .text(function(d,i) { return "Group " + (i + 1); });
+
+});
+
+function type(d) {
+	d.group = +d.group;
+	return d;
+}
+
+</script>
