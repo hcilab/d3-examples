@@ -3,12 +3,40 @@
   <head>
     <meta charset="utf-8">
     <title>Hospital Wait Times</title>
-    <link rel="stylesheet" href="WaitTimeScatter.css" charset="utf-8">
   </head>
   <body>
 		<script src="d3.js"></script>
 		<script src="d3tip.js"></script>
   </body>
+	<style>
+		.axis path,
+		.axis line {
+			fill: none;
+			stroke: rgba(0, 0, 0, 0.1);
+			shape-rendering: crispEdges;
+		}
+		.axisLine {
+			fill: none;
+			shape-rendering: crispEdges;
+			stroke: rgba(0, 0, 0, 0.5);
+			stroke-width: 2px;
+		}
+		.dot,
+		.dot2,
+		.dot3,
+		.dot4,
+		.dot5,
+		.dot6,
+		.dot7,
+		.dot8{
+			fill-opacity: 0.5;
+		}
+		.button1,
+		.button2
+		{
+			fill-opacity: 1.0;
+		}
+	</style>
 	<script>
 		//Instantiate data arrays
 		var qehData = new Array();
@@ -30,9 +58,19 @@
 				.range([0, width]).nice();
 		var y = d3.scale.linear()
 				.range([height, 0]).nice();
+		var y1 = d3.scale.linear()
+				.range([height, 0]).nice();
+		var y2 = d3.scale.linear()
+				.range([height, 0]).nice();
 		var xCat = "Date",
 				yCat = "Wait Time (hrs)";
 		var timeFormat = d3.time.format("%x %X");
+		var valueline = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y1(d.temp); });
+		var valueline2 = d3.svg.line()
+		.x(function(d) { return x(d.date); })
+		.y(function(d) { return y2(d.precip); });
 
 		//Set data flags
 		var pchMU = false;
@@ -43,6 +81,8 @@
 		var qehU = false;
 		var qehLU = false;
 		var qehA = false;
+		var showTemp = false;
+		var showPrecip = false;
 
 
 	//Read data
@@ -188,6 +228,9 @@
 						.scale(y)
 						.orient("left")
 						.tickSize(-width);
+
+				var yAxisRight = d3.svg.axis().scale(y1)
+				    .orient("right");
 
 				var svg = d3.select("body")
 			    .append("svg")
@@ -487,6 +530,91 @@
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
+				//Add Buttons
+				svg.append("rect")
+					.attr("class", "button1")
+					.attr("width", 140)
+					.attr("height", 30)
+					.attr("x", width + 50)
+					.attr("y", 510)
+					.attr("rx", 10)
+					.attr("ry", 10)
+					.attr("fill", "#EEAA66")
+					.on('click', function() {
+						showTemp = !showTemp;
+						d3.selectAll("svg").remove();
+						updateDraw();
+					})
+					.on("mouseover", function(){
+						d3.select(".button1")
+							.style("opacity", 0.5);
+					})
+					.on("mouseout", function(){
+						d3.select(".button1")
+							.style("opacity", 1.0);
+					});
+
+				svg.append("text")
+					.attr("class", "button1")
+					.attr("x", width + 60)
+					.attr("y", 530)
+					.text("Mean Temperature")
+					.on('click', function() {
+						showTemp = !showTemp;
+						d3.selectAll("svg").remove();
+						updateDraw();
+					})
+					.on("mouseover", function(){
+						d3.select(".button1")
+							.style("opacity", 0.5);
+					})
+					.on("mouseout", function(){
+						d3.select(".button1")
+							.style("opacity", 1.0);
+					});
+
+				svg.append("rect")
+					.attr("class", "button2")
+					.attr("width", 140)
+					.attr("height", 30)
+					.attr("x", width + 50)
+					.attr("y", 560)
+					.attr("rx", 10)
+					.attr("ry", 10)
+					.attr("fill", "#88CCEE")
+					.on('click', function() {
+						showPrecip = !showPrecip;
+						d3.selectAll("svg").remove();
+						updateDraw();
+					})
+					.on("mouseover", function(){
+						d3.select(".button2")
+							.style("opacity", 0.5);
+					})
+					.on("mouseout", function(){
+						d3.select(".button2")
+							.style("opacity", 1.0);
+					});
+
+				svg.append("text")
+					.attr("class", "button2")
+					.attr("x", width + 60)
+					.attr("y", 580)
+					.text("Total Precipitation")
+					.on('click', function() {
+						showPrecip = !showPrecip;
+						d3.selectAll("svg").remove();
+						updateDraw();
+					})
+					.on("mouseover", function(){
+						d3.select(".button2")
+							.style("opacity", 0.5);
+					})
+					.on("mouseout", function(){
+						d3.select(".button2")
+							.style("opacity", 1.0);
+					});
+
 				svg.append("g")
 						.classed("x axis", true)
 						.attr("transform", "translate(0," + height + ")")
@@ -623,6 +751,35 @@
 									})
 									.attr("fill", "blue");
 					}
+
+					d3.csv("PEIWeatherData.csv", function(error, data2){
+						if(error) throw error;
+						var timeFormat2 = d3.time.format("%x");
+						data2.forEach(function(d){
+							d.date = timeFormat2.parse(d.date);
+							d.temp = +d.temp;
+							d.precip = +d.precip;
+						});
+						y1.domain([-23, 25]);
+						y2.domain([0, 66]);
+						if(showTemp){
+							svg.append("path")
+								.attr("class", "weatherLine")
+								.classed("weatherLine", true)
+								.attr("d", valueline(data2))
+								.style("stroke", "#EEAA66")
+								.attr("fill", "none");
+						}
+						if(showPrecip){
+							svg.append("path")
+								.attr("class", "weatherLine")
+								.classed("weatherLine", true)
+								.attr("d", valueline2(data2))
+								.style("stroke", "#88CCEE")
+								.attr("fill", "none");
+						}
+					});
+
 			}
 
 			updateDraw();
