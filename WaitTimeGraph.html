@@ -266,14 +266,92 @@
 				var yAxisRight = d3.svg.axis().scale(y1)
 				    .orient("right");
 
+				//Add Zoom Behavior
+				var zoomBeh = d3.behavior.zoom()
+						.x(x)
+						.y(y)
+						.scaleExtent([0, 500])
+						.on("zoom", zoom);
+
+				//Add SVG Element
 				var svg = d3.select("body")
 			    .append("svg")
 			      .attr("width", outerWidth)
 			      .attr("height", outerHeight)
 			    .append("g")
-			      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+						.call(zoomBeh);
+
+				//Add Tooltip
+				var tip = d3.tip()
+					.attr('class', 'd3-tip')
+					.offset([-10, 0])
+					.html(function(d) {
+						return "<span style='color:white'>Date: " + d.date.toDateString() + ", Avg. # of People: " + Math.round(d.number*100)/100 + ", Avg. Wait: " + Math.round(d.wait*100)/100 + " hours" + "</span>";
+					});
+				svg.call(tip);
+
+				function zoom() {
+					svg.select(".x.axis").call(xAxis);
+					svg.select(".y.axis").call(yAxis);
+
+					svg.selectAll(".dot")
+							.attr("transform", transform);
+					svg.selectAll(".dot2")
+							.attr("transform", transform);
+					svg.selectAll(".dot3")
+							.attr("transform", transform);
+					svg.selectAll(".dot4")
+							.attr("transform", transform);
+					svg.selectAll(".dot5")
+							.attr("transform", transform);
+					svg.selectAll(".dot6")
+							.attr("transform", transform);
+					svg.selectAll(".dot7")
+							.attr("transform", transform);
+					svg.selectAll(".dot8")
+							.attr("transform", transform);
+					svg.selectAll(".weatherLine").remove();
+					drawWeather();
+				}
+
+				function transform(d) {
+					if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
+					else return "translate(" + -100 + "," + -100 + ")";
+				}
+
+				//Add rect background to zoom with
+				svg.append("rect")
+						.attr("width", width)
+						.attr("height", height)
+						.attr("fill", "white");
+
+				//Add Axes
+				svg.append("g")
+						.classed("x axis", true)
+						.attr("transform", "translate(0," + height + ")")
+						.call(xAxis)
+					.append("text")
+						.classed("label", true)
+						.attr("x", width)
+						.attr("y", margin.bottom - 10)
+						.style("text-anchor", "end")
+						.text(xCat);
 
 				svg.append("g")
+						.classed("y axis", true)
+						.call(yAxis)
+					.append("text")
+						.classed("label", true)
+						.attr("transform", "rotate(-90)")
+						.attr("y", -margin.left)
+						.attr("dy", ".71em")
+						.style("text-anchor", "end")
+						.text(yCat);
+
+				//Add Title
+				svg.append("g")
+					.attr("class", "title")
 					.append("text")
 						.attr("x", width/2 - 120)
 						.attr("y", -10)
@@ -283,14 +361,18 @@
 						.text("Hospital Wait Times in PEI");
 
 				//PCH Legend
-				svg.append("text")
+				svg.append("g")
+					.attr("class", "pchLegend");
+
+				svg.select(".pchLegend")
+					.append("text")
 						.text("PCH")
 						.attr("x", width + 130)
 						.attr("y", -20)
 						.style("text-anchor", "left")
 						.style("font-size", 22);
 
-				svg.append("g")
+				svg.select(".pchLegend")
 					.append("rect")
 						.attr("width", 250)
 						.attr("height",	200)
@@ -299,14 +381,16 @@
 						.attr("fill", "white")
 						.attr("stroke", "black");
 
-				svg.append("text")
+				svg.select(".pchLegend")
+					.append("text")
 						.text("Most Urgent: ")
 						.attr("x", width + 40)
 						.attr("y", 10)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("circle")
+				svg.select(".pchLegend")
+					.append("circle")
 						.attr("cx", width + 150)
 						.attr("cy", 5)
 						.attr("r", 10)
@@ -329,14 +413,16 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".pchLegend")
+					.append("text")
 						.text("Urgent: ")
 						.attr("x", width + 40)
 						.attr("y", 50)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("circle")
+				svg.select(".pchLegend")
+					.append("circle")
 						.attr("cx", width + 150)
 						.attr("cy", 45)
 						.attr("r", 10)
@@ -359,14 +445,16 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".pchLegend")
+					.append("text")
 						.text("Less Urgent: ")
 						.attr("x", width + 40)
 						.attr("y", 90)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("circle")
+				svg.select(".pchLegend")
+					.append("circle")
 						.attr("cx", width + 150)
 						.attr("cy", 85)
 						.attr("r", 10)
@@ -389,14 +477,16 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".pchLegend")
+					.append("text")
 						.text("Average: ")
 						.attr("x", width + 40)
 						.attr("y", 130)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("circle")
+				svg.select(".pchLegend")
+					.append("circle")
 						.attr("cx", width + 150)
 						.attr("cy", 125)
 						.attr("r", 10)
@@ -419,61 +509,75 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".pchLegend")
+					.attr("class", "pchLegend")
+					.append("text")
 						.text("Avg. # of People: ")
 						.attr("x", width + 40)
 						.attr("y", 170)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("circle")
+				svg.select(".pchLegend")
+					.attr("class", "pchLegend")
+					.append("circle")
 						.attr("r", Math.sqrt(1/Math.PI)*10)
 						.attr("cx", width + 170)
 						.attr("cy", 168)
 						.attr("fill", "grey")
 						.style("fill-opacity", 0.5);
-				svg.append("text")
+				svg.select(".pchLegend")
+					.attr("class", "pchLegend")
+					.append("text")
 						.text("1")
 						.attr("x", width + 168)
 						.attr("y", 185)
 						.style("text-anchor", "left")
 						.style("font-size", 10);
 
-				svg.append("circle")
+				svg.select(".pchLegend")
+					.append("circle")
 						.attr("r", Math.sqrt(5/Math.PI)*10)
-					.attr("cx", width + 200)
-					.attr("cy", 164)
-					.attr("fill", "grey")
-					.style("fill-opacity", 0.5);
-				svg.append("text")
-						.text("5")
-						.attr("x", width + 197)
-						.attr("y", 185)
-						.style("text-anchor", "left")
-						.style("font-size", 10);
+						.attr("cx", width + 200)
+						.attr("cy", 164)
+						.attr("fill", "grey")
+						.style("fill-opacity", 0.5);
+				svg.select(".pchLegend")
+						.append("text")
+							.text("5")
+							.attr("x", width + 197)
+							.attr("y", 185)
+							.style("text-anchor", "left")
+							.style("font-size", 10);
 
-				svg.append("circle")
+				svg.select(".pchLegend")
+					.append("circle")
 						.attr("r", Math.sqrt(10/Math.PI)*10)
-					.attr("cx", width + 240)
-					.attr("cy", 159)
-					.attr("fill", "grey")
-					.style("fill-opacity", 0.5);
-				svg.append("text")
-						.text("10")
-						.attr("x", width + 235)
-						.attr("y", 185)
-						.style("text-anchor", "left")
-						.style("font-size", 10);
+						.attr("cx", width + 240)
+						.attr("cy", 159)
+						.attr("fill", "grey")
+						.style("fill-opacity", 0.5);
+				svg.select(".pchLegend")
+					.append("text")
+							.text("10")
+							.attr("x", width + 235)
+							.attr("y", 185)
+							.style("text-anchor", "left")
+							.style("font-size", 10);
 
 				//QEH Legend
-				svg.append("text")
+				svg.append("g")
+					.attr("class", "qehLegend");
+
+				svg.select(".qehLegend")
+					.append("text")
 						.text("QEH")
 						.attr("x", width + 130)
 						.attr("y", -20 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 22);
 
-				svg.append("g")
+				svg.select(".qehLegend")
 					.append("rect")
 						.attr("width", 250)
 						.attr("height",	200)
@@ -482,14 +586,16 @@
 						.attr("fill", "white")
 						.attr("stroke", "black");
 
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("text")
 						.text("Most Urgent: ")
 						.attr("x", width + 40)
 						.attr("y", 10 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("rect")
+				svg.select(".qehLegend")
+					.append("rect")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
@@ -513,14 +619,16 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("text")
 						.text("Urgent: ")
 						.attr("x", width + 40)
 						.attr("y", 50 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("rect")
+				svg.select(".qehLegend")
+					.append("rect")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
@@ -544,14 +652,16 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("text")
 						.text("Less Urgent: ")
 						.attr("x", width + 40)
 						.attr("y", 90 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("rect")
+				svg.select(".qehLegend")
+					.append("rect")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
@@ -575,14 +685,16 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("text")
 						.text("Average: ")
 						.attr("x", width + 40)
 						.attr("y", 130 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("rect")
+				svg.select(".qehLegend")
+					.append("rect")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
@@ -606,49 +718,56 @@
 							updateDraw();
 						});
 
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("text")
 						.text("Avg. # of People: ")
 						.attr("x", width + 40)
 						.attr("y", 170 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
-				svg.append("rect")
+				svg.select(".qehLegend")
+					.append("rect")
 						.attr("width", Math.sqrt(1)*10)
 						.attr("height", Math.sqrt(1)*10)
 						.attr("x", width + 165)
 						.attr("y", 165 + 280)
 						.attr("fill", "grey")
 						.style("fill-opacity", 0.5);
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("text")
 						.text("1")
 						.attr("x", width + 168)
 						.attr("y", 185 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 10);
 
-				svg.append("rect")
-					.attr("width", Math.sqrt(5)*10)
-					.attr("height", Math.sqrt(5)*10)
-					.attr("x", width + 188)
-					.attr("y", 152 + 280)
-					.attr("fill", "grey")
-					.style("fill-opacity", 0.5);
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("rect")
+						.attr("width", Math.sqrt(5)*10)
+						.attr("height", Math.sqrt(5)*10)
+						.attr("x", width + 188)
+						.attr("y", 152 + 280)
+						.attr("fill", "grey")
+						.style("fill-opacity", 0.5);
+				svg.select(".qehLegend")
+					.append("text")
 						.text("5")
 						.attr("x", width + 197)
 						.attr("y", 185 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 10);
 
-				svg.append("rect")
-					.attr("width", Math.sqrt(10)*10)
-					.attr("height", Math.sqrt(10)*10)
-					.attr("x", width + 224)
-					.attr("y", 142 + 280)
-					.attr("fill", "grey")
-					.style("fill-opacity", 0.5);
-				svg.append("text")
+				svg.select(".qehLegend")
+					.append("rect")
+						.attr("width", Math.sqrt(10)*10)
+						.attr("height", Math.sqrt(10)*10)
+						.attr("x", width + 224)
+						.attr("y", 142 + 280)
+						.attr("fill", "grey")
+						.style("fill-opacity", 0.5);
+				svg.select(".qehLegend")
+					.append("text")
 						.text("10")
 						.attr("x", width + 235)
 						.attr("y", 185 + 280)
@@ -656,8 +775,12 @@
 						.style("font-size", 10);
 
 
-				//Add Buttons
-				svg.append("rect")
+			//Add Buttons
+			svg.append("g")
+				.attr("class", "button");
+
+			svg.select(".button")
+				.append("rect")
 					.attr("class", "button1")
 					.attr("width", 140)
 					.attr("height", 30)
@@ -676,7 +799,8 @@
 						updateDraw();
 					});
 
-				svg.append("text")
+			svg.select(".button")
+				.append("text")
 					.attr("class", "button1")
 					.attr("x", width + 60)
 					.attr("y", 530)
@@ -691,7 +815,8 @@
 						updateDraw();
 					});
 
-				svg.append("rect")
+			svg.select(".button")
+				.append("rect")
 					.attr("class", "button2")
 					.attr("width", 140)
 					.attr("height", 30)
@@ -710,7 +835,8 @@
 						updateDraw();
 					});
 
-				svg.append("text")
+			svg.select(".button")
+				.append("text")
 					.attr("class", "button2")
 					.attr("x", width + 60)
 					.attr("y", 580)
@@ -725,7 +851,8 @@
 						updateDraw();
 					});
 
-				svg.append("rect")
+			svg.select(".button")
+				.append("rect")
 					.attr("class", "button3")
 					.attr("width", 105)
 					.attr("height", 30)
@@ -744,7 +871,8 @@
 						updateDraw();
 					});
 
-				svg.append("text")
+			svg.select(".button")
+				.append("text")
 					.attr("class", "button3")
 					.attr("x", width + 60)
 					.attr("y", 630)
@@ -759,45 +887,20 @@
 						updateDraw();
 					});
 
-
-				//Add Axes
-				svg.append("g")
-						.classed("x axis", true)
-						.attr("transform", "translate(0," + height + ")")
-						.call(xAxis)
-					.append("text")
-						.classed("label", true)
-						.attr("x", width)
-						.attr("y", margin.bottom - 10)
-						.style("text-anchor", "end")
-						.text(xCat);
-
-				svg.append("g")
-			      .classed("y axis", true)
-			      .call(yAxis)
-			    .append("text")
-			      .classed("label", true)
-			      .attr("transform", "rotate(-90)")
-			      .attr("y", -margin.left)
-			      .attr("dy", ".71em")
-			      .style("text-anchor", "end")
-			      .text(yCat);
-
-
 				//Add Data Shape Elements
 
-				//Add Tooltip
-				var tip = d3.tip()
-					.attr('class', 'd3-tip')
-					.offset([-10, 0])
-					.html(function(d) {
-						return "<span style='color:white'>Date: " + d.date.toDateString() + ", Avg. # of People: " + Math.round(d.number*100)/100 + ", Avg. Wait: " + Math.round(d.wait*100)/100 + " hours" + "</span>";
-					});
-				svg.call(tip);
+				var objects = svg.append("svg")
+						.classed("objects", true)
+						.attr("width", width)
+						.attr("height", height);
 
 				//PCH Elements
+				objects.append("g")
+					.attr("class", "dots");
+
 					if(pchLU){
-						svg.selectAll(".dot3")
+						svg.select(".dots")
+							.selectAll(".dot3")
 									.data(pchData[2])
 								.enter().append("circle")
 									.classed("dot3", true)
@@ -811,7 +914,8 @@
 									.on("mouseout", tip.hide);
 					}
 					if(pchU){
-						svg.selectAll(".dot2")
+						svg.select(".dots")
+							.selectAll(".dot2")
 									.data(pchData[1])
 								.enter().append("circle")
 									.classed("dot2", true)
@@ -825,7 +929,8 @@
 									.on("mouseout", tip.hide);
 					}
 					if(pchMU){
-						svg.selectAll(".dot")
+						svg.select(".dots")
+							.selectAll(".dot")
 									.data(pchData[0])
 								.enter().append("circle")
 									.classed("dot", true)
@@ -839,7 +944,8 @@
 									.on("mouseout", tip.hide);
 					}
 					if(pchA){
-						svg.selectAll(".dot4")
+						svg.select(".dots")
+							.selectAll(".dot4")
 									.data(pchAverage)
 								.enter().append("circle")
 									.classed("dot4", true)
@@ -855,7 +961,8 @@
 
 					//QEH Elements
 					if(qehLU){
-						svg.selectAll(".dot7")
+						svg.select(".dots")
+							.selectAll(".dot7")
 									.data(qehData[2])
 								.enter().append("rect")
 									.classed("dot7", true)
@@ -870,7 +977,8 @@
 									.on("mouseout", tip.hide);
 					}
 					if(qehU){
-						svg.selectAll(".dot6")
+						svg.select(".dots")
+							.selectAll(".dot6")
 									.data(qehData[1])
 								.enter().append("rect")
 									.classed("dot6", true)
@@ -885,7 +993,8 @@
 									.on("mouseout", tip.hide);
 					}
 					if(qehMU){
-						svg.selectAll(".dot5")
+						svg.select(".dots")
+							.selectAll(".dot5")
 									.data(qehData[0])
 								.enter().append("rect")
 									.classed("dot5", true)
@@ -900,7 +1009,8 @@
 									.on("mouseout", tip.hide);
 					}
 					if(qehA){
-						svg.selectAll(".dot8")
+						svg.select(".dots")
+							.selectAll(".dot8")
 									.data(qehAverage)
 								.enter().append("rect")
 									.classed("dot8", true)
@@ -915,51 +1025,57 @@
 									.on("mouseout", tip.hide);
 					}
 
-					d3.csv("PEIWeatherData.csv", function(error, data2){
-						if(error) throw error;
-						data2.forEach(function(d){
-							d.date = timeFormat2.parse(d.date);
-							d.temp = +d.temp;
-							d.precip = +d.precip;
+					var drawWeather = function(){
+						d3.csv("PEIWeatherData.csv", function(error, data2){
+							if(error) throw error;
+							data2.forEach(function(d){
+								d.date = timeFormat2.parse(d.date);
+								d.temp = +d.temp;
+								d.precip = +d.precip;
+							});
+							y1.domain([-23, 25]);
+							y2.domain([0, 66]);
+							if(showTemp){
+								svg.select(".dots")
+									.append("path")
+										.attr("class", "weatherLine")
+										.classed("weatherLine", true)
+										.attr("d", valueline(data2))
+										.style("stroke", "#EEAA66")
+										.attr("fill", "none");
+							}
+							if(showPrecip){
+								svg.select(".dots")
+									.append("path")
+										.attr("class", "weatherLine")
+										.classed("weatherLine", true)
+										.attr("d", valueline2(data2))
+										.style("stroke", "#88CCEE")
+										.attr("fill", "none");
+							}
 						});
-						y1.domain([-23, 25]);
-						y2.domain([0, 66]);
-						if(showTemp){
-							svg.append("path")
-								.attr("class", "weatherLine")
-								.classed("weatherLine", true)
-								.attr("d", valueline(data2))
-								.style("stroke", "#EEAA66")
-								.attr("fill", "none");
-						}
-						if(showPrecip){
-							svg.append("path")
-								.attr("class", "weatherLine")
-								.classed("weatherLine", true)
-								.attr("d", valueline2(data2))
-								.style("stroke", "#88CCEE")
-								.attr("fill", "none");
-						}
-					});
 
-					d3.csv("MoonPhases.csv", function(error, data3){
-						if(error) throw error;
-						var timeFormat2 = d3.time.format("%x");
-						data3.forEach(function(d){
-							d.date = timeFormat2.parse(d.date);
-							d.phase = +d.phase;
-							if(d.phase == 4) d.phase = 2;
+						d3.csv("MoonPhases.csv", function(error, data3){
+							if(error) throw error;
+							var timeFormat2 = d3.time.format("%x");
+							data3.forEach(function(d){
+								d.date = timeFormat2.parse(d.date);
+								d.phase = +d.phase;
+								if(d.phase == 4) d.phase = 2;
+							});
+							y3.domain([1, 3]);
+							if(showMoon){
+								svg.select(".dots")
+									.append("path")
+										.attr("class", "weatherLine")
+										.classed("weatherLine", true)
+										.attr("d", valueline3(data3))
+										.style("stroke", "#BB33BB")
+										.attr("fill", "none");
+							}
 						});
-						y3.domain([1, 3]);
-						if(showMoon){
-							svg.append("path")
-								.attr("class", "weatherLine")
-								.classed("weatherLine", true)
-								.attr("d", valueline3(data3))
-								.style("stroke", "#BB33BB")
-								.attr("fill", "none");
-						}
-					});
+					}
+					drawWeather();
 			}
 
 			updateDraw();
