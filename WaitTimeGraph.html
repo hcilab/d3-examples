@@ -32,19 +32,32 @@
 			fill-opacity: 0.5;
 		}
 		.button1,
-		.button2
+		.button2,
+		.button3
 		{
-			fill-opacity: 1.0;
+			fill-opacity: 0.5;
+		}
+
+		.d3-tip {
+		  line-height: 1;
+		  font-weight: bold;
+		  padding: 12px;
+		  background: rgba(0, 0, 0, 0.8);
+		  color: #fff;
+		  border-radius: 2px;
 		}
 	</style>
 	<script>
 		//Instantiate data arrays
-		var qehData = new Array();
-		var pchData = new Array();
+		var qehData = [];
+		var pchData = [];
 		for(var i = 0; i < 4; i++){
-			qehData[i] = new Array();
-			pchData[i] = new Array();
+			qehData[i] = [];
+			pchData[i] = [];
 		}
+
+		var qehAverage = [];
+		var pchAverage = [];
 
 		//Define margin
 		var margin = { top: 50, right: 300, bottom: 50, left: 75 },
@@ -65,7 +78,7 @@
 		var y3 = d3.scale.linear()
 				.range([height, 0]).nice();
 		var xCat = "Date",
-				yCat = "Wait Time (hrs)";
+				yCat = "Avg. Wait Time (hrs)";
 		var timeFormat = d3.time.format("%x %X");
 		var timeFormat2 = d3.time.format("%x");
 		var valueline = d3.svg.line()
@@ -90,7 +103,6 @@
 		var showTemp = false;
 		var showPrecip = false;
 		var showMoon = false;
-
 
 	//Read data
 		d3.csv("waittimes.csv", function(error, data){
@@ -194,6 +206,13 @@
 			}
 			pchData = temp;
 
+			for(var i = 0; i < pchData[0].length; i++){
+				var day = pchData[0][i].date;
+				var wait = (pchData[0][i].wait + pchData[1][i].wait + pchData[2][i].wait)/3;
+				var number = (pchData[0][i].number + pchData[1][i].number + pchData[2][i].number)/3;
+				pchAverage[i] = {date:day, wait:wait, number:number};
+			}
+
 			temp = [[],[],[],[]];
 			for(var i = 0; i < 4; i++){
 				var count = 0;
@@ -221,6 +240,14 @@
 				}
 			}
 			qehData = temp;
+
+			for(var i = 0; i < qehData[0].length; i++){
+				var day = qehData[0][i].date;
+				var wait = (qehData[0][i].wait + qehData[1][i].wait + qehData[2][i].wait)/3;
+				var number = (qehData[0][i].number + qehData[1][i].number + qehData[2][i].number)/3;
+				qehAverage[i] = {date:day, wait:wait, number:number};
+			}
+
 
 			var updateDraw = function(){
 				x.domain(d3.extent(qehData[2], function(d) { return d.date; }));
@@ -280,11 +307,14 @@
 						.style("font-size", 16);
 
 				svg.append("circle")
-						.attr("class", "dot")
 						.attr("cx", width + 150)
 						.attr("cy", 5)
 						.attr("r", 10)
 						.attr("fill", "red")
+						.style("fill-opacity", function(){
+							if(pchMU) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot")
 								.style("fill-opacity", 1);
@@ -307,11 +337,14 @@
 						.style("font-size", 16);
 
 				svg.append("circle")
-						.attr("class", "dot2")
 						.attr("cx", width + 150)
 						.attr("cy", 45)
 						.attr("r", 10)
 						.attr("fill", "orange")
+						.style("fill-opacity", function(){
+							if(pchU) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot2")
 								.style("fill-opacity", 1);
@@ -334,11 +367,14 @@
 						.style("font-size", 16);
 
 				svg.append("circle")
-						.attr("class", "dot3")
 						.attr("cx", width + 150)
 						.attr("cy", 85)
 						.attr("r", 10)
 						.attr("fill", "green")
+						.style("fill-opacity", function(){
+							if(pchLU) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot3")
 								.style("fill-opacity", 1);
@@ -361,11 +397,14 @@
 						.style("font-size", 16);
 
 				svg.append("circle")
-						.attr("class", "dot4")
 						.attr("cx", width + 150)
 						.attr("cy", 125)
 						.attr("r", 10)
 						.attr("fill", "blue")
+						.style("fill-opacity", function(){
+							if(pchA) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot4")
 								.style("fill-opacity", 1);
@@ -381,18 +420,50 @@
 						});
 
 				svg.append("text")
-						.text("Size: ")
+						.text("Avg. # of People: ")
 						.attr("x", width + 40)
 						.attr("y", 170)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
+				svg.append("circle")
+						.attr("r", Math.sqrt(1/Math.PI)*10)
+						.attr("cx", width + 170)
+						.attr("cy", 168)
+						.attr("fill", "grey")
+						.style("fill-opacity", 0.5);
 				svg.append("text")
-						.text("Number of People")
-						.attr("x", width + 80)
-						.attr("y", 170)
+						.text("1")
+						.attr("x", width + 168)
+						.attr("y", 185)
 						.style("text-anchor", "left")
-						.style("font-size", 16);
+						.style("font-size", 10);
+
+				svg.append("circle")
+						.attr("r", Math.sqrt(5/Math.PI)*10)
+					.attr("cx", width + 200)
+					.attr("cy", 164)
+					.attr("fill", "grey")
+					.style("fill-opacity", 0.5);
+				svg.append("text")
+						.text("5")
+						.attr("x", width + 197)
+						.attr("y", 185)
+						.style("text-anchor", "left")
+						.style("font-size", 10);
+
+				svg.append("circle")
+						.attr("r", Math.sqrt(10/Math.PI)*10)
+					.attr("cx", width + 240)
+					.attr("cy", 159)
+					.attr("fill", "grey")
+					.style("fill-opacity", 0.5);
+				svg.append("text")
+						.text("10")
+						.attr("x", width + 235)
+						.attr("y", 185)
+						.style("text-anchor", "left")
+						.style("font-size", 10);
 
 				//QEH Legend
 				svg.append("text")
@@ -419,12 +490,15 @@
 						.style("font-size", 16);
 
 				svg.append("rect")
-						.attr("class", "dot5")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
 						.attr("y", 5 + 275)
 						.attr("fill", "red")
+						.style("fill-opacity", function(){
+							if(qehMU) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot5")
 								.style("fill-opacity", 1);
@@ -447,12 +521,15 @@
 						.style("font-size", 16);
 
 				svg.append("rect")
-						.attr("class", "dot6")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
 						.attr("y", 45 + 275)
 						.attr("fill", "orange")
+						.style("fill-opacity", function(){
+							if(qehU) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot6")
 								.style("fill-opacity", 1);
@@ -475,12 +552,15 @@
 						.style("font-size", 16);
 
 				svg.append("rect")
-						.attr("class", "dot7")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
 						.attr("y", 85 + 275)
 						.attr("fill", "green")
+						.style("fill-opacity", function(){
+							if(qehLU) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot7")
 								.style("fill-opacity", 1);
@@ -503,12 +583,15 @@
 						.style("font-size", 16);
 
 				svg.append("rect")
-						.attr("class", "dot8")
 						.attr("width", 15)
 						.attr("height", 15)
 						.attr("x", width + 140)
 						.attr("y", 130 + 270)
 						.attr("fill", "blue")
+						.style("fill-opacity", function(){
+							if(qehA) return 1.0;
+							else return 0.5;
+						})
 						.on("mouseover", function(){
 							d3.selectAll(".dot8")
 								.style("fill-opacity", 1);
@@ -524,18 +607,54 @@
 						});
 
 				svg.append("text")
-						.text("Size: ")
+						.text("Avg. # of People: ")
 						.attr("x", width + 40)
 						.attr("y", 170 + 280)
 						.style("text-anchor", "left")
 						.style("font-size", 16);
 
+				svg.append("rect")
+						.attr("width", Math.sqrt(1)*10)
+						.attr("height", Math.sqrt(1)*10)
+						.attr("x", width + 165)
+						.attr("y", 165 + 280)
+						.attr("fill", "grey")
+						.style("fill-opacity", 0.5);
 				svg.append("text")
-						.text("Number of People")
-						.attr("x", width + 80)
-						.attr("y", 170 + 280)
+						.text("1")
+						.attr("x", width + 168)
+						.attr("y", 185 + 280)
 						.style("text-anchor", "left")
-						.style("font-size", 16);
+						.style("font-size", 10);
+
+				svg.append("rect")
+					.attr("width", Math.sqrt(5)*10)
+					.attr("height", Math.sqrt(5)*10)
+					.attr("x", width + 188)
+					.attr("y", 152 + 280)
+					.attr("fill", "grey")
+					.style("fill-opacity", 0.5);
+				svg.append("text")
+						.text("5")
+						.attr("x", width + 197)
+						.attr("y", 185 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 10);
+
+				svg.append("rect")
+					.attr("width", Math.sqrt(10)*10)
+					.attr("height", Math.sqrt(10)*10)
+					.attr("x", width + 224)
+					.attr("y", 142 + 280)
+					.attr("fill", "grey")
+					.style("fill-opacity", 0.5);
+				svg.append("text")
+						.text("10")
+						.attr("x", width + 235)
+						.attr("y", 185 + 280)
+						.style("text-anchor", "left")
+						.style("font-size", 10);
+
 
 				//Add Buttons
 				svg.append("rect")
@@ -547,18 +666,14 @@
 					.attr("rx", 10)
 					.attr("ry", 10)
 					.attr("fill", "#EEAA66")
+					.style("fill-opacity", function(){
+						if(showTemp) return 1.0;
+						else return 0.5;
+					})
 					.on('click', function() {
 						showTemp = !showTemp;
 						d3.selectAll("svg").remove();
 						updateDraw();
-					})
-					.on("mouseover", function(){
-						d3.select(".button1")
-							.style("opacity", 0.5);
-					})
-					.on("mouseout", function(){
-						d3.select(".button1")
-							.style("opacity", 1.0);
 					});
 
 				svg.append("text")
@@ -566,18 +681,14 @@
 					.attr("x", width + 60)
 					.attr("y", 530)
 					.text("Mean Temperature")
+					.style("fill-opacity", function(){
+						if(showTemp) return 1.0;
+						else return 0.5;
+					})
 					.on('click', function() {
 						showTemp = !showTemp;
 						d3.selectAll("svg").remove();
 						updateDraw();
-					})
-					.on("mouseover", function(){
-						d3.select(".button1")
-							.style("opacity", 0.5);
-					})
-					.on("mouseout", function(){
-						d3.select(".button1")
-							.style("opacity", 1.0);
 					});
 
 				svg.append("rect")
@@ -589,18 +700,14 @@
 					.attr("rx", 10)
 					.attr("ry", 10)
 					.attr("fill", "#88CCEE")
+					.style("fill-opacity", function(){
+						if(showPrecip) return 1.0;
+						else return 0.5;
+					})
 					.on('click', function() {
 						showPrecip = !showPrecip;
 						d3.selectAll("svg").remove();
 						updateDraw();
-					})
-					.on("mouseover", function(){
-						d3.select(".button2")
-							.style("opacity", 0.5);
-					})
-					.on("mouseout", function(){
-						d3.select(".button2")
-							.style("opacity", 1.0);
 					});
 
 				svg.append("text")
@@ -608,18 +715,14 @@
 					.attr("x", width + 60)
 					.attr("y", 580)
 					.text("Total Precipitation")
+					.style("fill-opacity", function(){
+						if(showPrecip) return 1.0;
+						else return 0.5;
+					})
 					.on('click', function() {
 						showPrecip = !showPrecip;
 						d3.selectAll("svg").remove();
 						updateDraw();
-					})
-					.on("mouseover", function(){
-						d3.select(".button2")
-							.style("opacity", 0.5);
-					})
-					.on("mouseout", function(){
-						d3.select(".button2")
-							.style("opacity", 1.0);
 					});
 
 				svg.append("rect")
@@ -631,18 +734,14 @@
 					.attr("rx", 10)
 					.attr("ry", 10)
 					.attr("fill", "#BB33BB")
+					.style("fill-opacity", function(){
+						if(showMoon) return 1.0;
+						else return 0.5;
+					})
 					.on('click', function() {
 						showMoon = !showMoon;
 						d3.selectAll("svg").remove();
 						updateDraw();
-					})
-					.on("mouseover", function(){
-						d3.select(".button3")
-							.style("opacity", 0.5);
-					})
-					.on("mouseout", function(){
-						d3.select(".button3")
-							.style("opacity", 1.0);
 					});
 
 				svg.append("text")
@@ -650,20 +749,18 @@
 					.attr("x", width + 60)
 					.attr("y", 630)
 					.text("Moon Phases")
+					.style("fill-opacity", function(){
+						if(showMoon) return 1.0;
+						else return 0.5;
+					})
 					.on('click', function() {
 						showMoon = !showMoon;
 						d3.selectAll("svg").remove();
 						updateDraw();
-					})
-					.on("mouseover", function(){
-						d3.select(".button3")
-							.style("opacity", 0.5);
-					})
-					.on("mouseout", function(){
-						d3.select(".button3")
-							.style("opacity", 1.0);
 					});
 
+
+				//Add Axes
 				svg.append("g")
 						.classed("x axis", true)
 						.attr("transform", "translate(0," + height + ")")
@@ -689,6 +786,15 @@
 
 				//Add Data Shape Elements
 
+				//Add Tooltip
+				var tip = d3.tip()
+					.attr('class', 'd3-tip')
+					.offset([-10, 0])
+					.html(function(d) {
+						return "<span style='color:white'>Date: " + d.date.toDateString() + ", Avg. # of People: " + Math.round(d.number*100)/100 + ", Avg. Wait: " + Math.round(d.wait*100)/100 + " hours" + "</span>";
+					});
+				svg.call(tip);
+
 				//PCH Elements
 					if(pchLU){
 						svg.selectAll(".dot3")
@@ -699,8 +805,10 @@
 										if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("r", function(d){ return Math.sqrt(d.number*20); })
-									.attr("fill", "green");
+									.attr("r", function(d){ return Math.sqrt(d.number/Math.PI)*10; })
+									.attr("fill", "green")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 					if(pchU){
 						svg.selectAll(".dot2")
@@ -711,8 +819,10 @@
 										if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("r", function(d){ return Math.sqrt(d.number*20); })
-									.attr("fill", "orange");
+									.attr("r", function(d){ return Math.sqrt(d.number/Math.PI)*10; })
+									.attr("fill", "orange")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 					if(pchMU){
 						svg.selectAll(".dot")
@@ -723,23 +833,24 @@
 										if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("r", function(d){ return Math.sqrt(d.number*20); })
-									.attr("fill", "red");
+									.attr("r", function(d){ return Math.sqrt(d.number/Math.PI)*10; })
+									.attr("fill", "red")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 					if(pchA){
 						svg.selectAll(".dot4")
-									.data(pchData[0])
+									.data(pchAverage)
 								.enter().append("circle")
 									.classed("dot4", true)
 									.attr("transform", function(d,i){
-										var wait = (pchData[0][i].wait + pchData[1][i].wait + pchData[2][i].wait)/3;
-										if(wait != 0) return "translate(" + x(d.date) + "," + y(wait) + ")";
+										if(d.wait != 0) return "translate(" + x(d.date) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("r", function(d,i){
-										return Math.sqrt((20*(pchData[0][i].number + pchData[1][i].number + pchData[2][i].number)/3));
-									})
-									.attr("fill", "blue");
+									.attr("r", function(d,i){ return Math.sqrt(d.number/Math.PI)*10; })
+									.attr("fill", "blue")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 
 					//QEH Elements
@@ -749,12 +860,14 @@
 								.enter().append("rect")
 									.classed("dot7", true)
 									.attr("transform", function(d){
-										if(d.wait != 0)	return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(d.wait) + ")";
+										if(d.wait != 0)	return "translate(" + (x(d.date) - (Math.sqrt(d.number/Math.PI)*10)) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("width", function(d){ return Math.sqrt(d.number*40); })
-									.attr("height", function(d){ return Math.sqrt(d.number*40); })
-									.attr("fill", "green");
+									.attr("width", function(d){ return Math.sqrt(d.number)*10; })
+									.attr("height", function(d){ return Math.sqrt(d.number)*10; })
+									.attr("fill", "green")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 					if(qehU){
 						svg.selectAll(".dot6")
@@ -762,12 +875,14 @@
 								.enter().append("rect")
 									.classed("dot6", true)
 									.attr("transform", function(d){
-										if(d.wait != 0)	return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(d.wait) + ")";
+										if(d.wait != 0)	return "translate(" + (x(d.date) - (Math.sqrt(d.number/Math.PI)*10)) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("width", function(d){ return Math.sqrt(d.number*40); })
-									.attr("height", function(d){ return Math.sqrt(d.number*40); })
-									.attr("fill", "orange");
+									.attr("width", function(d){ return Math.sqrt(d.number)*10; })
+									.attr("height", function(d){ return Math.sqrt(d.number)*10; })
+									.attr("fill", "orange")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 					if(qehMU){
 						svg.selectAll(".dot5")
@@ -775,30 +890,29 @@
 								.enter().append("rect")
 									.classed("dot5", true)
 									.attr("transform", function(d){
-										if(d.wait != 0)	return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(d.wait) + ")";
+										if(d.wait != 0)	return "translate(" + (x(d.date) - (Math.sqrt(d.number)*10)) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("width", function(d){ return Math.sqrt(d.number*40); })
-									.attr("height", function(d){ return Math.sqrt(d.number*40); })
-									.attr("fill", "red");
+									.attr("width", function(d){ return Math.sqrt(d.number)*10; })
+									.attr("height", function(d){ return Math.sqrt(d.number)*10; })
+									.attr("fill", "red")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 					if(qehA){
 						svg.selectAll(".dot8")
-									.data(qehData[0])
+									.data(qehAverage)
 								.enter().append("rect")
 									.classed("dot8", true)
 									.attr("transform", function(d,i){
-										var wait = (qehData[0][i].wait + qehData[1][i].wait + qehData[2][i].wait)/3;
-										if(wait != 0) return "translate(" + (x(d.date) - ((Math.sqrt(d.number*40))/2)) + "," + y(wait) + ")";
+										if(d.wait != 0) return "translate(" + (x(d.date) - (Math.sqrt(d.number)*5)) + "," + y(d.wait) + ")";
 										else return "translate(" + -100 + "," + -100 + ")";
 									})
-									.attr("width", function(d,i){
-										return Math.sqrt(40*(qehData[0][i].number + qehData[1][i].number + qehData[2][i].number)/3);
-									})
-									.attr("height", function(d,i){
-										return Math.sqrt(40*(qehData[0][i].number + qehData[1][i].number + qehData[2][i].number)/3);
-									})
-									.attr("fill", "blue");
+									.attr("width", function(d,i){	return Math.sqrt(d.number)*10; })
+									.attr("height", function(d,i){ return Math.sqrt(d.number)*10; })
+									.attr("fill", "blue")
+									.on("mouseover", tip.show)
+									.on("mouseout", tip.hide);
 					}
 
 					d3.csv("PEIWeatherData.csv", function(error, data2){
