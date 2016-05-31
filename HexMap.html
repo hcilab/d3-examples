@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body id="chart"></body>
+
+<script type="text/javascript" src="d3.js"></script>
+<script type="text/javascript" src="hexbin.js"></script>
+<script>
+//svg sizes and margins
+var margin = {
+    top: 50,
+    right: 20,
+    bottom: 20,
+    left: 50
+},
+width = 1500,
+height = 1500;
+
+//The number of columns and rows of the heatmap
+var MapColumns = 45,
+    MapRows = 30;
+
+//The maximum radius the hexagons can have to still fit the screen
+var hexRadius = d3.min([width/((MapColumns + 0.5) * Math.sqrt(3)),
+   height/((MapRows + 1/3) * 1.5)]);
+
+var points = [];
+var maxX = 0;
+var maxY = 0;
+var r1x;
+var r1y;
+var r2x;
+var r2y;
+var r1x2;
+var r1y2;
+var r2x2;
+var r2y2;
+
+var color = function(i){
+	var c = 0.02;
+	var t1 = 200*(Math.random() - 0.5);
+	var t2 = 200*(Math.random() - 0.5);
+	var t3 = 200*(Math.random() - 0.5);
+	var t4 = 200*(Math.random() - 0.5);
+	var t5 = 200*(Math.random() - 0.5);
+	var t6 = 200*(Math.random() - 0.5);
+	var t7 = 200*(Math.random() - 0.5);
+	var t8 = 200*(Math.random() - 0.5);
+
+	if((points[i][0] >= r1x + t1 && points[i][0] <= r2x + t2 && points[i][1] >= r1y + t3 && points[i][1] < r2y + t4)
+	|| (points[i][0] >= r1x2 + t5 && points[i][0] <= r2x2 + t6 && points[i][1] >= r1y2 + t7 && points[i][1] < r2y2 + t8))
+	{ c = 0.9; }
+	if(Math.random() < c){
+		return "#00AA33"; }
+	else{	return "#00AAFF" }
+};
+
+//Calculate the center positions of each hexagon
+for (var i = 0; i < MapRows; i++) {
+    for (var j = 0; j < MapColumns; j++) {
+        points.push([hexRadius * j * 1.75, hexRadius * i * 1.5, "color"]);
+    }//for j
+}//for i
+var count = 0;
+points.forEach(function(p){
+	count++;
+	if(p[0] > maxX) maxX = p[0];
+	if(p[1] > maxY) maxY = p[1];
+});
+r1x = Math.random()*maxX;
+r1y = Math.random()*maxY;
+r2x = Math.random()*maxX;
+r2y = Math.random()*maxY;
+r1x2 = Math.random()*maxX;
+r1y2 = Math.random()*maxY;
+r2x2 = Math.random()*maxX;
+r2y2 = Math.random()*maxY;
+if(r1x > r2x){ var temp = r1x; r1x = r2x; r2x = temp; }
+if(r1y > r2y){ var temp = r1y; r1y = r2y; r2y = temp; }
+if(r1x2 > r2x2){ var temp = r1x2; r1x2 = r2x2; r2x2 = temp; }
+if(r1y2 > r2y2){ var temp = r1y2; r1y2 = r2y2; r2y2 = temp; }
+
+points.forEach(function(p,i){
+	p[3] = color(i);
+});
+
+//Create SVG element
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+//Set the hexagon radius
+var hexbin = d3.hexbin()
+            .radius(hexRadius);
+
+//Draw the hexagons
+svg.append("g")
+    .selectAll(".hexagon")
+    .data(hexbin(points))
+    .enter().append("path")
+    .attr("class", "hexagon")
+    .attr("d", function (d) { return "M" + d.x + "," + d.y + hexbin.hexagon(); })
+    .attr("stroke", "green")
+    .attr("stroke-width", "1px")
+		.style("fill", function (d,i) {	return points[i][3]; });
+
+</script>
