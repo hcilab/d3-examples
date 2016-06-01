@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<script type="text/javascript" src="d3.js"></script>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="537" height="529"></canvas>
+    <script>
+
+      function drawImage(imageObj) {
+        var canvas = document.getElementById('myCanvas');
+				canvas.style.display="none";
+        var context = canvas.getContext('2d');
+        var imageX = 0;
+        var imageY = 0;
+        var imageWidth = imageObj.width;
+        var imageHeight = imageObj.height;
+
+        context.drawImage(imageObj, imageX, imageY);
+
+        var imageData = context.getImageData(imageX, imageY, imageWidth, imageHeight);
+        var data = imageData.data;
+
+				var colorMatrix = [];
+
+        for(var y = 0; y < imageHeight; y++) {
+          for(var x = 0; x < imageWidth; x++) {
+            var red = data[((imageWidth * y) + x) * 4];
+            var green = data[((imageWidth * y) + x) * 4 + 1];
+            var blue = data[((imageWidth * y) + x) * 4 + 2];
+            var alpha = data[((imageWidth * y) + x) * 4 + 3];
+						colorMatrix.push([x,y,red,green,blue,alpha]);
+          }
+        }
+				//
+				// var tempMatrix = [[]];
+				// var split = 3;
+				// var newWidth = Math.ceil(imageWidth/split);
+				// var newHeight = Math.ceil(imageHeight/split);
+				// for(var y = 0; y < newHeight; y++) {
+				// 	tempMatrix.push([]);
+				// 	for(var x = 0; x < newWidth; x++) {
+				// 		tempMatrix[y].push([x,y,0,0,0,0]);
+				// 	}
+				// }
+				//
+				// var xCount = 0;
+				// var yCount = 0;
+				// var xCoord = 0;
+				// var yCoord = 0;
+				// var xTotal = 0;
+				//
+				// colorMatrix.forEach(function(d,i){
+				// 	tempMatrix[yCoord][xCoord][0] = xCoord;
+				// 	tempMatrix[yCoord][xCoord][1] = yCoord;
+				// 	for(var i = 2; i <= 5; i++){
+				// 		tempMatrix[yCoord][xCoord][i] += d[i];
+				// 	}
+				// 	xCount++;
+				// 	if(xCount == split){ xCount = 0; xCoord++; xTotal++; }
+				// 	if(xTotal == newWidth){ xTotal = 0; xCoord = 0; yCount++; }
+				// 	if(yCount == split){ yCount = 0; yCoord++; xCoord = 0; }
+				// });
+				//
+				// var colorMatrix = [];
+				// for(var y = 0; y < newHeight; y++) {
+				// 	for(var x = 0; x < newWidth; x++) {
+				// 		if(x == newWidth - 1 || y == newHeight - 1){
+				// 			var red = 255;
+				// 			var green = 255;
+				// 			var blue = 255;
+				// 			var alpha = 0;
+				// 		}
+				// 		else{
+				// 			var red = Math.floor(tempMatrix[y][x][2]/(split*split));
+				// 			var green = Math.floor(tempMatrix[y][x][3]/(split*split));
+				// 			var blue = Math.floor(tempMatrix[y][x][4]/(split*split));
+				// 			var alpha = Math.floor(tempMatrix[y][x][5]/(split*split));
+				// 		}
+				// 		colorMatrix.push([x,y,red,green,blue,alpha]);
+				// 	}
+				// }
+				//
+				// var force = d3.layout.force()
+				// 		.nodes(colorMatrix)
+				// 		.size([imageWidth, imageHeight])
+				// 		.on("tick", tick)
+				// 		.start();
+
+				var svg = d3.select("body").append("svg")
+				    .attr("width", imageWidth)
+				    .attr("height", imageHeight);
+				//
+				var node = svg.selectAll("rect")
+						.data(colorMatrix)
+					.enter().append("rect")
+						.attr("width", 1)
+						.attr("height", 1)
+						.attr("x", function(d){
+							return d[0];
+						})
+						.attr("y", function(d){
+							return d[1];
+						})
+						.attr("fill", function(d){
+							return "rgb(" + d[2] + "," + d[3] + "," + d[4] + ")";
+						});
+
+						//
+						// function tick(e) {
+						// 	node.attr("cx", function(d) { return d.x; })
+						// 			.attr("cy", function(d) { return d.y; });
+						// }
+						//
+						// function mousedown() {
+						// 	nodes.forEach(function(o, i) {
+						// 		o.x += (Math.random() - .5 *1000);
+						// 		o.y += (Math.random() - .5 *1000);
+						// 	});
+						// 	force.resume();
+						// }
+
+      }
+      var imageObj = new Image();
+      imageObj.onload = function() {
+        drawImage(this);
+      };
+      imageObj.src = "doge.jpeg";
+
+    </script>
+  </body>
+</html>
