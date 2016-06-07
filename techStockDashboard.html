@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body { font: 12px Arial;}
+
+path {
+    stroke: steelblue;
+    stroke-width: 2.5;
+    fill: none;
+}
+
+.xAxis1 path,
+.yAxis1 path,
+.xAxis2 path,
+.yAxis2 path{
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.dropbtn {
+    background-color: steelblue;
+    color: white;
+    padding: 8px;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropbtn:hover, .dropbtn:focus {
+    background-color: #5692C4;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 106px;
+    overflow: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 10px 10px;
+    text-decoration: none;
+    display: block;
+}
+
+.show {display:block;}
+
+.companySelect{
+    color: black;
+    padding: 10px 10px;
+		min-width: 106px;
+    display: block;
+		background-color: #f1f1f1;
+}
+
+</style>
+<body>
+
+	<div class="dropdown">
+	<button onclick="myFunction()" class="dropbtn">Select Company</button>
+	  <div id="myDropdown" class="dropdown-content"></div>
+	</div>
+	<div id="row1"></div>
+	<div id="row2"></div>
+
+<script type="text/javascript" src="d3.js"></script>
+
+<script>
+
+var selected = 0;
+
+var margin = {top: 30, right: 30, bottom: 30, left: 80},
+    width = 500 - margin.left - margin.right,
+    height = 270 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%d-%b-%Y").parse;
+
+var x1 = d3.time.scale().range([0, width]);
+var y1 = d3.scale.linear().range([height, 0]);
+
+var xAxis1 = d3.svg.axis().scale(x1)
+    .orient("bottom").ticks(12)
+		.tickFormat(d3.time.format("%b"));
+
+var yAxis1 = d3.svg.axis().scale(y1)
+    .orient("left").ticks(10);
+
+var valueline = d3.svg.line()
+    .x(function(d) { return x1(d.date); })
+    .y(function(d) { return y1(d.close); });
+
+
+var x2 = d3.time.scale()
+		.range([0, width]).nice();
+
+var y2 = d3.scale.linear()
+		.range([height,0]).nice();
+
+var xAxis2 = d3.svg.axis()
+		.scale(x2)
+		.orient("bottom")
+		.ticks(14)
+		.ticks(d3.time.months, 1)
+			.tickFormat(d3.time.format("%b"));
+
+var yAxis2 = d3.svg.axis()
+		.scale(y2)
+		.orient("left")
+		.ticks(10);
+
+var selectCompany = function(d,i){
+	var set = [];
+	d.forEach(function(j){
+		if(j.name == i){ set.push(j); }
+	});
+	return set;
+}
+
+var svg1 = d3.select("#row1")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+var svg2 = d3.select("#row2")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+var svg3 = d3.select("#row1")
+    .append("svg")
+        .attr("width", width/2 + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+var svg4 = d3.select("#row2")
+    .append("svg")
+        .attr("width", width/2 + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+var selected = 0;
+var companies = [];
+
+function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+}
+
+window.onclick = function(event) {
+  if (!event.target.matches('.dropbtn')) {
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  }
+}
+
+d3.csv("techStockData.csv", function(error, data) {
+	var count = 0;
+
+		data.forEach(function(d){
+			var name = d.name;
+			if(count > 0){
+				d.name = count-1;
+				if(name != companies[count-1]){
+					companies.push(name);
+					d.name = count;
+					count++;
+				}
+			}
+			else{
+				d.name = count;
+				companies.push(name);
+				count++;
+			}
+			d.date = parseDate(d.date);
+			d.open = +d.open;
+			d.high = +d.high;
+			d.low = +d.low;
+			d.close = +d.close;
+			d.volume = +d.volume;
+		});
+
+		companies.forEach(function(d,i){
+			d3.select(".dropdown-content")
+				.append("button")
+					.attr("class", "companySelect")
+					.attr("id", i)
+					.text(d)
+					.on("click", function(){
+						selected = this.id;
+						updateData();
+					});
+		});
+
+    x1.domain(d3.extent(selectCompany(data,selected), function(d) { return d.date; }));
+    y1.domain([d3.min(selectCompany(data,selected), function(d) { return d.close; }), d3.max(selectCompany(data,selected), function(d) { return d.close; })]);
+		x2.domain(d3.extent(selectCompany(data,selected), function(d) { return d.date; }));
+		y2.domain([d3.min(selectCompany(data,selected), function(d) { return d.volume; }), d3.max(selectCompany(data,selected), function(d) { return d.volume; })]);
+
+		svg1.append("rect")
+        .attr("class", "bg")
+        .attr("width",width - 1)
+				.attr("height",height)
+				.attr("fill","white");
+    svg1.append("path")
+        .attr("class", "line")
+        .attr("d", valueline(selectCompany(data,selected)));
+		svg2.append("rect")
+				.attr("class", "bg")
+				.attr("width",width - 1)
+				.attr("height",height)
+				.attr("fill","white");
+
+		var updateInfo = function(index){
+		svg3.selectAll(".infoPanel").remove();
+		svg4.selectAll(".infoPanel").remove();
+		if(index != -1){
+			svg2.selectAll(".bar")
+					.attr("fill", function(d){
+						if(x2(d.date) < 1){
+							return "none";
+						}
+						else{
+							if(d.date.getTime() == selectCompany(data,selected)[index].date.getTime()){
+								return "brown";
+							}
+							else{
+								return "steelblue";
+							}
+						}
+					});
+			var close = selectCompany(data,selected)[index].close;
+			var closeDiff = close - selectCompany(data,selected)[index-1].close;
+			svg3.append("g")
+				.attr("class", "infoPanel")
+				.append("rect")
+					.attr("width", 220)
+					.attr("height", 220)
+					.attr("fill", function(){
+						if(closeDiff >= 0){
+							return "#33CC11";
+						}
+						else{
+							return "#CC3311";
+						}
+					})
+					.attr("rx", 10)
+					.attr("ry", 10);
+			svg4.append("g")
+				.attr("class", "infoPanel")
+				.append("rect")
+					.attr("width", 220)
+					.attr("height", 220)
+					.attr("fill", "white")
+					.attr("stroke", "grey")
+					.attr("stroke-width", 2)
+					.attr("rx", 10)
+					.attr("ry", 10);
+			var textY = 90;
+			svg3.append("g")
+				.attr("class", "infoPanel")
+				.append("text")
+					.attr("x", 110)
+					.attr("y", textY)
+					.attr("fill", "white")
+					.style("text-anchor", "middle")
+					.style("font-size", 48)
+					.text(companies[selectCompany(data,selected)[index].name]);
+			svg3.append("g")
+				.attr("class", "infoPanel")
+				.append("text")
+					.attr("x", 110)
+					.attr("y", textY + 50)
+					.attr("fill", "white")
+					.style("text-anchor", "middle")
+					.style("font-size", 24)
+					.text(Math.round((closeDiff) * 100)/100);
+			svg3.append("g")
+				.attr("class", "infoPanel")
+				.append("text")
+					.attr("x", 110)
+					.attr("y", textY + 80)
+					.attr("fill", "white")
+					.style("text-anchor", "middle")
+					.style("font-size", 24)
+					.text(Math.round((closeDiff/close)*100)/100 + "%");
+			textY = 50;
+			svg4.append("g")
+				.attr("class", "infoPanel")
+				.append("text")
+					.attr("x", 110)
+					.attr("y", textY)
+					.attr("fill", "black")
+					.style("text-anchor", "middle")
+					.style("font-size", 18)
+					.text(companies[selectCompany(data,selected)[index].name] + " Stock Info For: ");
+			var date = selectCompany(data,selected)[index].date;
+			var format = d3.time.format("%B %d");
+			svg4.append("g")
+				.attr("class", "infoPanel")
+				.append("text")
+					.attr("x", 110)
+					.attr("y", textY + 30)
+					.attr("fill", "black")
+					.style("text-anchor", "middle")
+					.style("font-size", 24)
+					.text(format(date));
+			svg4.append("g")
+				.attr("class", "infoPanel")
+				.append("text")
+					.attr("x", 110)
+					.attr("y", textY + 80)
+					.attr("fill", "black")
+					.style("text-anchor", "middle")
+					.style("font-size", 24)
+					.text("Close: " + Math.round(close * 100)/100);
+			svg4.append("g")
+				.attr("class", "infoPanel")
+				.append("text")
+					.attr("x", 110)
+					.attr("y", textY + 120)
+					.attr("fill", "black")
+					.style("text-anchor", "middle")
+					.style("font-size", 24)
+					.text("Volume: " + selectCompany(data,selected)[index].volume);
+			}
+			else{
+				svg2.selectAll(".bar")
+						.attr("fill", function(d){
+							if(x2(d.date) < 1){
+								return "none";
+							}
+							else{
+									return "steelblue";
+							}
+						});
+			}
+		}
+
+
+		var marker = svg1.append("circle")
+				.attr("r", 5)
+				.style("display", "none")
+				.style("pointer-events", "none")
+				.style("fill", "none")
+				.style("stroke", "steelblue")
+				.style("stroke-width", 2);
+
+		var bisect = d3.bisector(function(datum) {
+			return datum.date;
+		}).right;
+
+		svg1.select("rect")
+				.on('mouseover', function() {
+					marker.style('display', 'inherit');
+				})
+				.on('mouseout', function() {
+					marker.style('display', 'none');
+					updateInfo(-1);
+				})
+				.on('mousemove', function() {
+					var selectedData = selectCompany(data,selected);
+					var mouse = d3.mouse(this);
+					marker.attr('cx', mouse[0]);
+					var timestamp = x1.invert(mouse[0]);
+					var index = bisect(selectedData, timestamp);
+					try{
+						var startDatum = selectedData[index - 1];
+						var endDatum = selectedData[index];
+						var interpolate = d3.interpolateNumber(startDatum.close, endDatum.close);
+						var range = endDatum.date.getTime() - startDatum.date.getTime();
+						var valueY = interpolate((timestamp % range) / range);
+						marker.attr('cy', y1(valueY));
+						updateInfo(index);
+					}
+					catch(error){
+					}
+				});
+
+		svg1.select(".line")
+				.on('mouseover', function() {
+					marker.style('display', 'inherit');
+				})
+				.on('mouseout', function() {
+					marker.style('display', 'none');
+					updateInfo(-1);
+				})
+				.on('mousemove', function() {
+					var selectedData = selectCompany(data,selected);
+					var mouse = d3.mouse(this);
+					marker.attr('cx', mouse[0]);
+					var timestamp = x1.invert(mouse[0]);
+					var index = bisect(selectedData, timestamp);
+					try{
+						var startDatum = selectedData[index - 1];
+						var endDatum = selectedData[index];
+						var interpolate = d3.interpolateNumber(startDatum.close, endDatum.close);
+						var range = endDatum.date.getTime() - startDatum.date.getTime();
+						var valueY = interpolate((timestamp % range) / range);
+						marker.attr('cy', y1(valueY));
+						updateInfo(index);
+					}
+					catch(error){
+					}
+				});
+
+    svg1.append("g")
+        .attr("class", "xAxis1")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis1);
+
+    svg1.append("g")
+        .attr("class", "yAxis1")
+        .call(yAxis1);
+
+		svg1.append("g")
+			.append("text")
+				.attr("class", "title")
+				.attr("x", width/2 - 120)
+				.attr("y", -10)
+				.style("text-anchor", "center")
+				.style("font-size", 24)
+				.style("font-weight", "bold")
+				.text("2015 Stock Prices: " + companies[selected]);
+
+		svg2.select("rect")
+				.on('mouseover', function() {
+					marker.style('display', 'inherit');
+				})
+				.on('mouseout', function() {
+					marker.style('display', 'none');
+					updateInfo(-1);
+				})
+				.on('mousemove', function() {
+					var selectedData = selectCompany(data,selected);
+					var mouse = d3.mouse(this);
+					marker.attr('cx', mouse[0]);
+					var timestamp = x1.invert(mouse[0]);
+					var index = bisect(selectedData, timestamp);
+					try{
+						var startDatum = selectedData[index - 1];
+						var endDatum = selectedData[index];
+						var interpolate = d3.interpolateNumber(startDatum.close, endDatum.close);
+						var range = endDatum.date.getTime() - startDatum.date.getTime();
+						var valueY = interpolate((timestamp % range) / range);
+						marker.attr('cy', y1(valueY));
+						updateInfo(index);
+					}
+					catch(error){
+					}
+				});
+		svg2.append("g")
+				.attr("class", "xAxis2")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis2);
+		svg2.append("g")
+				.attr("class", "yAxis2")
+				.attr("transform", "translate(0,0)")
+				.call(yAxis2);
+
+		svg2.append("g")
+				.selectAll("rect")
+				.data(selectCompany(data,selected))
+			.enter().append("rect")
+				.attr("class", "bar")
+				.attr("width", 4)
+				.attr("height", function(d){ return height - y2(d.volume); })
+				.attr("x", function(d){ return x2(d.date) - 5/2; })
+				.attr("y", function(d){ return y2(d.volume); })
+				.attr("fill", function(d){
+					if(x2(d.date) < 1){
+						return "none";
+					}
+					else{
+						return "steelblue";
+					}
+				})
+				.on('mouseover', function() {
+					marker.style('display', 'inherit');
+				})
+				.on('mouseout', function() {
+					marker.style('display', 'none');
+					updateInfo(-1);
+				})
+				.on('mousemove', function() {
+					var selectedData = selectCompany(data,selected);
+					var mouse = d3.mouse(this);
+					marker.attr('cx', mouse[0]);
+					var timestamp = x1.invert(mouse[0]);
+					var index = bisect(selectedData, timestamp);
+					try{
+						var startDatum = selectedData[index - 1];
+						var endDatum = selectedData[index];
+						var interpolate = d3.interpolateNumber(startDatum.close, endDatum.close);
+						var range = endDatum.date.getTime() - startDatum.date.getTime();
+						var valueY = interpolate((timestamp % range) / range);
+						marker.attr('cy', y1(valueY));
+						updateInfo(index);
+					}
+					catch(error){
+					}
+				});
+		svg2.append("g")
+			.append("text")
+				.attr("class", "title")
+				.attr("x", width/2 - 50)
+				.attr("y", -10)
+				.style("text-anchor", "center")
+				.style("font-size", 24)
+				.style("font-weight", "bold")
+				.text("Volume");
+});
+
+function updateData() {
+		svg3.selectAll(".infoPanel").remove();
+
+		d3.csv("techStockData.csv", function(error, data) {
+			var companies = [];
+			var count = 0;
+
+				data.forEach(function(d){
+					var name = d.name;
+					if(count > 0){
+						d.name = count-1;
+						if(name != companies[count-1]){
+							companies.push(name);
+							d.name = count;
+							count++;
+						}
+					}
+					else{
+						d.name = count;
+						companies.push(name);
+						count++;
+					}
+					d.date = parseDate(d.date);
+					d.open = +d.open;
+					d.high = +d.high;
+					d.low = +d.low;
+					d.close = +d.close;
+					d.volume = +d.volume;
+				});
+
+    	x1.domain(d3.extent(selectCompany(data,selected), function(d) { return d.date; }));
+			y1.domain([d3.min(selectCompany(data,selected), function(d) { return d.close; }), d3.max(selectCompany(data,selected), function(d) { return d.close; })]);
+    	var svg1 = d3.select("body").transition();
+
+			svg1.select(".title")
+					.attr("x", width/2 - 120)
+					.attr("y", -10)
+					.style("text-anchor", "center")
+					.style("font-size", 24)
+					.style("font-weight", "bold")
+					.text("2015 Stock Prices: " + companies[selected]);
+      svg1.select(".line")
+          .duration(750)
+          .attr("d", valueline(selectCompany(data,selected)));
+      svg1.select(".xAxis1")
+          .duration(750)
+          .call(xAxis1);
+      svg1.select(".yAxis1")
+          .duration(750)
+          .call(yAxis1);
+
+			x2.domain(d3.extent(selectCompany(data,selected), function(d) { return d.date; }));
+			y2.domain([d3.min(selectCompany(data,selected), function(d) { return d.volume; }), d3.max(selectCompany(data,selected), function(d) { return d.volume; })]);
+			svg2.selectAll(".bar")
+			.data(selectCompany(data,selected))
+				.transition()
+				.duration(750)
+				.attr("height", function(d){ return height - y2(d.volume); })
+				.attr("x", function(d){ return x2(d.date) - 5/2; })
+				.attr("y", function(d){ return y2(d.volume); })
+			svg2.select(".xAxis2")
+				.transition()
+        .duration(750)
+				.call(xAxis2);
+			svg2.select(".yAxis2")
+				.transition()
+        .duration(750)
+				.call(yAxis2);
+    });
+}
+
+</script>
+</body>
