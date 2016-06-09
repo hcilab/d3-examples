@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+	<link rel="stylesheet" href="icons.css" charset="utf-8">
+</head>
+<style>
+
+i { font-size: 100px;}
+
+.tick {
+	fill: black;
+	stroke: none;
+	font-family: Arial Bold, sans-serif;
+}
+
+.xAxis path,
+.yAxis path{
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+path {
+    stroke: green;
+    stroke-width: 2;
+    fill: none;
+}
+
+</style>
+<script type="text/javascript" src="d3.js"></script>
+<body>
+<div id="col1" style="float:left">
+	<div id="row1"></div>
+	<div id="row2"></div>
+</div>
+<div id="col2" style="float:left"></div>
+</body>
+<script>
+var stats = [];
+var format = d3.time.format("");
+var margin = {top: 40, right: 10, bottom: 30, left: 10},
+    width = 750 - margin.left - margin.right,
+    height = 240 - margin.top - margin.bottom;
+var parseDate = d3.time.format("%d-%b-%Y").parse;
+var x = d3.time.scale().range([0, width*(3/4)]);
+var y = d3.scale.linear().range([height*2, 0]);
+var xAxis = d3.svg.axis().scale(x)
+    .orient("bottom").ticks(5)
+		.tickFormat(d3.time.format("%b %d"));
+var yAxis = d3.svg.axis().scale(y)
+    .orient("left").ticks(10);
+var valueline = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.score); });
+
+var svg1 = d3.select("#row1").append("svg")
+		.attr("width", width + margin.left + margin.right + 30)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+var svg2 = d3.select("#row2").append("svg")
+		.attr("width", width + margin.left + margin.right + 30)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+var svg3 = d3.select("#col2").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", (height + margin.top + margin.bottom)*2)
+	.append("g")
+		.attr("transform", "translate(" + 100 + "," + 90 + ")");
+var xOffset = 18;
+var xSpace = 143;
+svg1.append("g")
+		.attr("class", "top")
+	.append("rect")
+		.attr("width", width)
+		.attr("height", height)
+		.attr("rx", 5)
+		.attr("ry", 5)
+		.attr("fill", "white");
+svg1.select("g.top")
+	.append("text")
+		.attr("x", 357)
+		.attr("fill", "black")
+		.attr("stroke", "black")
+		.style("text-anchor", "middle")
+		.style("font-size", 32)
+		.style("font-family", "Arial Bold, sans-serif")
+		.text("Top Achievements");
+svg1.select("g.top")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace * 0)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#1155FF");
+svg1.select("g.top")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace * 0 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 20)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("High Score");
+svg1.select("g.top")
+	.append("text")
+	  .attr("x", xOffset + xSpace*0 + 39)
+	  .attr("y", 115)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 40;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e033}"; });
+svg1.select("g.top")
+		.attr("class", "top")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#CFC000");
+svg1.select("g.top")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 12)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Most Coins Collected");
+svg1.select("g.top")
+	.append("text")
+	  .attr("x", xOffset + xSpace*1 + 39)
+	  .attr("y", 115)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 40;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e0f3}"; });
+svg1.select("g.top")
+		.attr("class", "top")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace*2)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#AA3300");
+svg1.select("g.top")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace*2 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 16)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Highest Level");
+svg1.select("g.top")
+	.append("text")
+	  .attr("x", xOffset + xSpace*2 + 33)
+	  .attr("y", 120)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 50;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e0ff}"; });
+svg1.select("g.top")
+		.attr("class", "top")
+	.append("rect")
+		.attr("id", "box")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace*3)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("shadow", "2px 2px 4px #000000")
+		.attr("fill", "#22CC22");
+svg1.select("g.top")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace*3 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 16)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Top Avg. Speed");
+svg1.select("g.top")
+	.append("text")
+	  .attr("x", xOffset + xSpace*3 + 25)
+	  .attr("y", 130)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 70;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{39}"; });
+svg1.select("g.top")
+		.attr("class", "top")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace*4)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#8844AA");
+svg1.select("g.top")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace*4 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 16)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Longest Game");
+svg1.select("g.top")
+	.append("text")
+	  .attr("x", xOffset + xSpace*4 + 39)
+	  .attr("y", 115)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 40;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e0e1}"; });
+
+svg2.append("g")
+		.attr("class", "life")
+	.append("rect")
+		.attr("width", width)
+		.attr("height", height)
+		.attr("rx", 5)
+		.attr("ry", 5)
+		.attr("fill", "white");
+svg2.select("g.life")
+	.append("text")
+		.attr("x", 357)
+		.attr("fill", "black")
+		.attr("stroke", "black")
+		.style("text-anchor", "middle")
+		.style("font-size", 32)
+		.style("font-family", "Arial Bold, sans-serif")
+		.text("Lifetime Achievements");
+svg2.select("g.life")
+		.attr("class", "life")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace * 0)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#1155FF");
+svg2.select("g.life")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace * 0 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 16)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Average Score");
+svg2.select("g.life")
+	.append("text")
+	  .attr("x", xOffset + xSpace*0 + 39)
+	  .attr("y", 115)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 40;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e033}"; });
+svg2.select("g.life")
+		.attr("class", "life")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#CFC000");
+svg2.select("g.life")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 12)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Avg. Coins Collected");
+svg2.select("g.life")
+	.append("text")
+	  .attr("x", xOffset + xSpace*1 + 39)
+	  .attr("y", 115)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 40;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e0f3}"; });
+svg2.select("g.life")
+		.attr("class", "life")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace*2)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#AA3300");
+svg2.select("g.life")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace*2 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 16)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Average Level");
+svg2.select("g.life")
+	.append("text")
+	  .attr("x", xOffset + xSpace*2 + 33)
+	  .attr("y", 120)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 50;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e0ff}"; });
+svg2.select("g.life")
+		.attr("class", "life")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace*3)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#22CC22");
+svg2.select("g.life")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace*3 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 16)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Average Speed");
+svg2.select("g.life")
+	.append("text")
+	  .attr("x", xOffset + xSpace*3 + 25)
+	  .attr("y", 130)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 70;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\39"; });
+svg2.select("g.life")
+		.attr("class", "life")
+	.append("rect")
+		.attr("width", 120)
+		.attr("height", 120)
+		.attr("x", xOffset + xSpace*4)
+		.attr("y", margin.top)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "#8844AA");
+svg2.select("g.life")
+	.append("text")
+		.attr("fill", "white")
+		.attr("stroke", "white")
+		.attr("stroke-width", 0.5)
+		.attr("x", xOffset + xSpace*4 + 60)
+		.attr("y", margin.top + 30)
+		.style("text-anchor", "middle")
+		.style("font-size", 16)
+		.style("font-family", "Arial Bold, sans-serif")
+		.style("text-shadow", "2px 2px 4px #000000")
+		.text("Average Game");
+svg2.select("g.life")
+	.append("text")
+	  .attr("x", xOffset + xSpace*4 + 39)
+	  .attr("y", 115)
+	  .attr("font-family","ElegantIcons")
+	  .attr("font-size", function(d) { return 40;} )
+		.style("fill", "white")
+		.style("text-shadow", "2px 2px 4px #000000")
+	  .text(function(d) { return "\u{e0e1}"; });
+
+d3.csv("Stats.csv", function(error, data){
+	if (error) throw error;
+	data.forEach(function(d){
+		stats.push(d);
+	});
+	drawUpdate();
+});
+drawUpdate = function(){
+	var topScore = 0;
+	var topCoins = 0;
+	var topTime = 0;
+	var topSpeed = 0;
+	var topLevel = 0;
+	var lifeScore = 0;
+	var lifeCoins = 0;
+	var lifeTime = 0;
+	var lifeSpeed = 0;
+	var lifeLevel = 0;
+	var lifeGames = 0;
+	stats.forEach(function(s){
+		s.date = new Date(+s.date);
+		if(+s.score > topScore) topScore = +s.score;
+		if(+s.coins_collected > topCoins) topCoins = +s.coins_collected;
+		if(+s.time_played_millis > topTime) topTime = +s.time_played_millis;
+		if(+s.avg_speed > topSpeed) topSpeed = +s.avg_speed;
+		if(+s.level > topLevel) topLevel = +s.level;
+		lifeScore += +s.score;
+		lifeCoins += +s.coins_collected;
+		lifeTime += +s.time_played_millis;
+		lifeSpeed += +s.avg_speed;
+		lifeLevel += +s.level;
+		lifeGames++;
+	});
+
+	svg1.select("g.top")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace * 0 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){	return Math.round(topScore)});
+	svg1.select("g.top")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){	return Math.round(topCoins) + " Coins"});
+	svg1.select("g.top")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace*2 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){	return "Level " + Math.round(topLevel)});
+	svg1.select("g.top")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace*3 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){	return Math.round(topSpeed) + "km/h"});
+	svg1.select("g.top")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace*4 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){
+				var ms = topTime;
+				ms = 1000*Math.round(ms/1000);
+				var d = new Date(ms);
+				return d.getUTCMinutes() + "m " + d.getUTCSeconds() + "s";
+			});
+
+	svg2.select("g.life")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace * 0 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){ return Math.round(lifeScore/lifeGames)});
+	svg2.select("g.life")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){ return Math.round(lifeCoins/lifeGames) + " Coins" });
+	svg2.select("g.life")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace*2 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){ return "Level " + Math.round(lifeLevel/lifeGames)});
+	svg2.select("g.life")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace*3 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){ return Math.round(lifeSpeed/lifeGames) + "km/h"});
+	svg2.select("g.life")
+		.append("text")
+			.attr("fill", "white")
+			.attr("stroke", "white")
+			.attr("stroke-width", 0.5)
+			.attr("x", xOffset + xSpace*4 + 60)
+			.attr("y", margin.top + 100)
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.style("text-shadow", "2px 2px 4px #000000")
+			.text(function(){
+				var ms = Math.round(lifeTime/lifeGames);
+				ms = 1000*Math.round(ms/1000);
+				var d = new Date(ms);
+				return d.getUTCMinutes() + "m " + d.getUTCSeconds() + "s";
+			});
+
+	x.domain(d3.extent(stats, function(d) { return d.date; }));
+	y.domain([ d3.min(stats, function(d) { return +d.score; }), d3.max(stats, function(d) { return +d.score; })]);
+	svg3.append("g")
+			.attr("class", "title")
+			.attr("transform", "translate(0," + 0 + ")")
+		.append("text")
+			.attr("stroke", "black")
+			.attr("transform", "translate(" + 275 + "," + -50 + ")")
+			.style("text-anchor", "middle")
+			.style("font-size", 32)
+			.style("font-family", "Arial Bold, sans-serif")
+			.text("Score Histogram");
+	svg3.append("g")
+			.attr("class", "title")
+			.attr("transform", "translate(0," + 0 + ")")
+		.append("text")
+			.attr("stroke", "black")
+			.attr("transform", "translate(" + 275 + "," + -20 + ")")
+			.style("text-anchor", "middle")
+			.style("font-size", 20)
+			.style("font-family", "Arial Bold, sans-serif")
+			.text("Games Played: " + lifeGames);
+	svg3.append("g")
+			.attr("class", "xAxis")
+			.attr("transform", "translate(0," + height*2 + ")")
+			.call(xAxis);
+	svg3.append("g")
+			.attr("class", "yAxis")
+			.call(yAxis);
+	svg3.select(".yAxis")
+		.append("text")
+			.attr("class", "label")
+			.attr("x", -20)
+			.attr("y", -10)
+			.style("font-family", "Arial Bold, sans-serif")
+			.text("Score");
+		svg3.append("path")
+				.attr("class", "line")
+				.attr("d", valueline(stats));
+
+
+}
+</script>
